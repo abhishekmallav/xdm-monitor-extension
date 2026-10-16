@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Register with XDM</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="register.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand-wrapper">
+      <img src="xdm-logo-orange.png" alt="XDM Logo" class="brand-icon" onerror="this.src='icon16.png'">
+      <span class="brand-title">XDM Browser Monitor</span>
+    </div>
+  </header>
+  <main class="main-layout">
+    <div class="status-card active">
+      <div class="status-info">
+        <div class="status-indicator"></div>
+        <div class="status-texts">
+          <span class="status-label">Extension Registration</span>
+          <span class="status-sub">Connecting extension to XDM Desktop</span>
+        </div>
+      </div>
+    </div>
+    <div class="empty-state" style="display: flex;">
+      <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      </svg>
+      <div class="empty-state-title">Register with XDM</div>
+      <div class="empty-state-desc" style="margin-bottom: 12px;">Connecting with XDM application automatically...</div>
+      <a id="link" class="primary-button" style="text-decoration: none;">Register with XDM</a>
+      <div id="content" style="margin-top: 8px;"></div>
+      <div style="font-size: 11px; color: var(--muted-text); margin-top: 10px;">Once registered, please restart the browser.</div>
+    </div>
+  </main>
+</body>
+</html>

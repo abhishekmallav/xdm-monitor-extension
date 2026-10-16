@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>XDM Browser Monitor - Connection Error</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="error.js"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="brand-wrapper">
+      <img src="xdm-logo-orange.png" alt="XDM Logo" class="brand-icon" onerror="this.src='icon16.png'">
+      <span class="brand-title">XDM Browser Monitor</span>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-layout">
+    <!-- Error Alert Card -->
+    <div class="error-msg">
+      <div style="font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Unable to Connect
+      </div>
+      <p>Could not communicate with XDM. Please make sure XDM application is running on your computer.</p>
+    </div>
+
+    <!-- Action Toolbar -->
+    <div class="footer-actions" style="margin-top: 10px;">
+      <button type="button" class="primary-button flex-1" id="OpenLink" style="width: 100%;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+        Launch XDM
+      </button>
+    </div>
+  </main>
+</body>
+</html>

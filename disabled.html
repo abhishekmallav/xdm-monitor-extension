@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>XDM Browser Monitor - Disabled</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="brand-wrapper">
+      <img src="xdm-logo-orange.png" alt="XDM Logo" class="brand-icon" onerror="this.src='icon16.png'">
+      <span class="brand-title">XDM Browser Monitor</span>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-layout">
+    <!-- Status Card (Paused State) -->
+    <section class="status-card paused">
+      <div class="status-info">
+        <div class="status-indicator"></div>
+        <div class="status-texts">
+          <span class="status-label">Monitoring Disabled</span>
+          <span class="status-sub">Browser monitoring is paused in the XDM desktop application</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Info Banner -->
+    <div class="empty-state" style="display: flex;">
+      <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+      </svg>
+      <div class="empty-state-title">Monitoring Turned Off</div>
+      <div class="empty-state-desc">To resume capturing downloads, enable browser monitoring inside XDM Settings.</div>
+    </div>
+  </main>
+</body>
+</html>

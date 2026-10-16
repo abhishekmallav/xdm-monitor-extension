@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>XDM Browser Monitor</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="popup.js"></script>
+</head>
+<body>
+  <!-- Header: XDM Logo and title, more formats, clear items, refresh -->
+  <header class="app-header">
+    <div class="brand-wrapper">
+      <img src="xdm-logo-orange.png" alt="XDM Logo" class="brand-icon" onerror="this.src='icon16.png'">
+      <span class="brand-title">XDM Browser Monitor</span>
+    </div>
+    <div class="header-actions">
+      <!-- 1. More Formats -->
+      <button type="button" class="icon-btn" id="format" aria-label="More formats" title="More formats">
+        <i class="fa-solid fa-film"></i>
+      </button>
+      <!-- 2. Clear Items -->
+      <button type="button" class="icon-btn icon-btn-danger" id="clear" aria-label="Clear items" title="Clear items">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
+      <!-- 3. Refresh -->
+      <button type="button" class="icon-btn" id="headerRefreshBtn" aria-label="Refresh media list" title="Refresh media list">
+        <i class="fa-solid fa-rotate-right"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- More Formats Guidance Modal -->
+  <div class="modal-backdrop" id="formatModal" role="dialog" aria-modal="true" aria-labelledby="formatModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-icon-badge">
+          <i class="fa-solid fa-film"></i>
+        </div>
+        <div class="modal-title-area">
+          <h3 class="modal-title" id="formatModalTitle">Capture More Formats</h3>
+          <p class="modal-subtitle">How to detect other video qualities</p>
+        </div>
+        <button type="button" class="icon-btn modal-close-btn" id="closeFormatModalBtn" aria-label="Close dialog">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="instruction-step">
+          <span class="step-badge">1</span>
+          <div class="step-content">
+            <span class="step-title">Change web player quality</span>
+            <span class="step-desc">Open the video player's settings on the page and select your desired format or resolution (e.g., 1080p, 4K, or audio).</span>
+          </div>
+        </div>
+        <div class="instruction-step">
+          <span class="step-badge">2</span>
+          <div class="step-content">
+            <span class="step-title">Play stream for a few seconds</span>
+            <span class="step-desc">Let the player stream and buffer the newly selected format.</span>
+          </div>
+        </div>
+        <div class="instruction-step">
+          <span class="step-badge">3</span>
+          <div class="step-content">
+            <span class="step-title">Check detected media</span>
+            <span class="step-desc">XDM automatically intercepts the stream and adds the new format to this list.</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="action-btn btn-primary" id="gotItFormatBtn" style="width: 100%;">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="main-layout">
+    <!-- Status Card -->
+    <section class="status-card active" id="statusCard">
+      <div class="status-info">
+        <div class="status-indicator" id="statusIndicator"></div>
+        <div class="status-texts">
+          <span class="status-label" id="statusLabel">Monitoring Active</span>
+          <span class="status-sub" id="statusSub">Listening for downloadable media</span>
+        </div>
+      </div>
+      <label class="switch-label" title="Toggle browser monitoring">
+        <input type="checkbox" id="chk">
+        <span class="switch-track">
+          <span class="switch-thumb"></span>
+        </span>
+      </label>
+    </section>
+
+    <!-- Inline Confirmation Panel for Clear -->
+    <div class="inline-confirm-panel" id="clearConfirmPanel">
+      <div class="confirm-header">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span>Clear all captured media for this tab?</span>
+      </div>
+      <div class="confirm-actions">
+        <button type="button" class="action-btn" id="cancelClearBtn">Cancel</button>
+        <button type="button" class="action-btn btn-danger" id="confirmClearBtn">Confirm Clear</button>
+      </div>
+    </div>
+
+    <!-- Empty State (Shown when no media is detected on this tab) -->
+    <div class="empty-state" id="emptyState">
+      <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+      </svg>
+      <div class="empty-state-title">No Media Detected</div>
+      <div class="empty-state-desc">Play a video or audio stream on this page to capture download links.</div>
+    </div>
+
+    <!-- Media Section -->
+    <section id="content">
+      <div class="section-header">
+        <span class="section-title">Detected Media</span>
+        <span class="media-badge-count" id="mediaCount">0 items</span>
+      </div>
+
+      <div id="list" class="list-scroll-area">
+        <table id="table"></table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
