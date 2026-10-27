@@ -2,7 +2,7 @@
 // Only its pure string table/decoder is evaluated, in an empty, time-limited VM context.
 import fs from 'node:fs';
 import vm from 'node:vm';
-const root = new URL('../vendor/fetchv/', import.meta.url);
+const root = new URL('../vendor/stream/', import.meta.url);
 const source = fs.readFileSync(new URL('upstream/hls-loader.js', root), 'utf8');
 const prefixEnd = source.indexOf('const _0x57028d=');
 if (prefixEnd < 0) throw new Error('This adapter only supports the pinned FetchV v3 snapshot.');

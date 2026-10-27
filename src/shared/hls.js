@@ -22,9 +22,11 @@ export function safeFilename(title) {
 
 export function publicStream(stream) {
     let name = new URL(stream.url).pathname.split('/').pop() || 'HLS video';
-    try { name = decodeURIComponent(name); } catch (_) {}
-    return { id: stream.id, text: name, pageTitle: stream.title, info: 'HLS | Chrome download',
-        kind: 'hls', tabId: String(stream.tabId), url: stream.url };
+    try { name = decodeURIComponent(name); } catch (_) { }
+    return {
+        id: stream.id, text: name, pageTitle: stream.title, info: 'HLS | Stream download',
+        kind: 'hls', tabId: String(stream.tabId), url: stream.url
+    };
 }
 
 // Do not copy cookies or browser-managed connection/range headers into replay rules.

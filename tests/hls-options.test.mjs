@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Options } from '../vendor/fetchv/modules/options.js';
+import { Options } from '../vendor/stream/modules/options.js';
 import { saveBlob, waitForDownload } from '../src/hls/save.js';
 import { migrateAutomaticSave } from '../src/hls/preferences.js';
 

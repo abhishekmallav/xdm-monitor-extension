@@ -126,7 +126,9 @@ export default class RequestWatcher {
         chrome.webRequest.onSendHeaders.addListener(
             this.onSendHeadersEventCallback,
             { urls: ["http://*/*", "https://*/*"] },
-            ["extraHeaders", "requestHeaders"]
+            // Keep the option order identical to HlsMonitor. Chromium coalesces
+            // equivalent filters; reversed options can collide on registration.
+            ["requestHeaders", "extraHeaders"]
         );
 
         chrome.webRequest.onHeadersReceived.addListener(

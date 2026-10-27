@@ -1,15 +1,25 @@
 ﻿// XDM adapter around FetchV's original Panel, Fetcher, Controller and muxer workflow.
-import { Controller, Panel } from '../../vendor/fetchv/hls-loader.js';
+import { Controller, Panel } from '../../vendor/stream/hls-loader.js';
 import { saveBlob } from '../hls/save.js';
 import { requireCompletedVideo } from '../hls/playlist.js';
-import { Options } from '../../vendor/fetchv/modules/options.js';
+import { Options } from '../../vendor/stream/modules/options.js';
 import { clearCompletedCache } from '../hls/cache.js';
 import { migrateAutomaticSave } from '../hls/preferences.js';
+import { installAssemblyUi } from '../hls/assembly-ui.js';
+import { createTransferState, connectTransferPanel } from './transfer.js';
 
 const taskId = new URL(location.href).searchParams.get('task');
 const status = document.getElementById('downloadStatus');
 const errorBox = document.getElementById('downloadError');
-let controller, saving = false;
+let controller, saving = false, saveTransferState;
+const setTransferState = createTransferState(document);
+setTransferState('preparing');
+const assemblyUi = installAssemblyUi(Panel, {
+    document, wrapper: document.getElementById('assemblyStatus'),
+    label: document.getElementById('assemblyLabel'), percentage: document.getElementById('assemblyPercent'),
+    card: document.querySelector('.download-card'), status,
+    onAssembling: () => setTransferState('assembling')
+});
 const clearCacheButton = document.getElementById('clearDownloadCache');
 function syncCacheButton() {
     clearCacheButton.disabled = saving || !controller?.isCompleted || !controller?.result;
@@ -17,6 +27,7 @@ function syncCacheButton() {
 clearCacheButton.addEventListener('click', () => {
     if (clearCompletedCache(controller, saving)) {
         status.textContent = 'Cache cleared. Any files already saved in Downloads are kept.';
+        if (document.querySelector('.download-card').dataset.state !== 'saved') setTransferState('cleared');
     }
     syncCacheButton();
 });
@@ -60,27 +71,39 @@ function observePanel(method, after) {
         return result;
     };
 }
-observePanel('setCompleted', () => { status.textContent = 'Download complete. The MP4 is ready to save to Downloads.'; syncCacheButton(); });
-observePanel('setPause', () => { status.textContent = 'Paused. Select Resume Download to continue.'; });
-observePanel('setStart', () => { status.textContent = 'Downloading video segments…'; errorBox.hidden = true; syncCacheButton(); });
+const initializePanel = Panel.prototype.init;
+Panel.prototype.init = async function (...args) {
+    const result = await initializePanel.apply(this, args);
+    connectTransferPanel(this);
+    return result;
+};
+observePanel('setCompleted', () => { setTransferState('ready'); status.textContent = 'Download complete. The MP4 is ready to save to Downloads.'; syncCacheButton(); });
+observePanel('setPause', () => { setTransferState('paused'); status.textContent = 'Paused. Select Resume to continue.'; });
+observePanel('setStart', () => { setTransferState('downloading'); status.textContent = 'Downloading video parts. Your MP4 will be assembled next.'; errorBox.hidden = true; syncCacheButton(); });
 observePanel('setError', function (message) {
     // Preserve the original state transitions; display server-provided errors as text.
     if (this.$error) this.$error.textContent = String(message);
+    setTransferState('error');
     status.textContent = 'Download stopped.';
 });
 document.addEventListener('xdm-save-start', () => {
     saving = true;
+    saveTransferState = document.querySelector('.download-card').dataset.state;
+    if (controller?.isCompleted && controller.result) setTransferState('saving');
     errorBox.hidden = true;
     status.textContent = 'Saving the MP4 to Downloads...';
     syncCacheButton();
 });
 document.addEventListener('xdm-save-complete', event => {
     saving = false;
+    setTransferState(controller?.isCompleted && controller.result ? 'saved' : saveTransferState);
     status.textContent = `Saved ${event.detail.filename} to Downloads.`;
+    controller?.ui?.showDownloadsList();
     syncCacheButton();
 });
 document.addEventListener('xdm-save-error', event => {
     saving = false;
+    setTransferState(controller?.isCompleted && controller.result ? 'ready' : saveTransferState);
     showError(event.detail.message);
     syncCacheButton();
     if (controller?.ui?.$save) controller.ui.$save.disabled = false;
@@ -88,10 +111,12 @@ document.addEventListener('xdm-save-error', event => {
 });
 window.addEventListener('unhandledrejection', event => {
     event.preventDefault();
+    assemblyUi.finish();
+    setTransferState('error');
     showError(event.reason || 'The download could not be completed.');
 });
 window.addEventListener('beforeunload', event => {
-    if (saving || (controller && !controller.isCompleted && !controller.isFailure && !controller.isStop)) {
+    if (saving || assemblyUi.active || (controller && !controller.isCompleted && !controller.isFailure && !controller.isStop)) {
         event.preventDefault(); event.returnValue = '';
     }
 });
@@ -101,6 +126,7 @@ async function start() {
     const task = await chrome.runtime.sendMessage({ type: 'hls-task', taskId });
     if (!task || task.error) throw new Error(task?.error || 'Unable to open this download session.');
     document.title = `${task.title || 'HLS video'} — XDM`;
+    document.getElementById('sourceHost').textContent = new URL(task.pageUrl || task.url).hostname;
     controller = new Controller('container', 'panel');
     // Ordinary AES-128 playlists with accessible keys use the same decrypter in every Chromium browser.
     controller.encryptedAllow = true;
@@ -162,4 +188,4 @@ async function start() {
     new MutationObserver(syncCacheButton).observe(controller.ui.$clearCacheEnd, { attributes: true, attributeFilter: ['class'] });
     syncCacheButton();
 }
-start().catch(error => { if (controller) controller.isFailure = true; showError(error); status.textContent = 'Unable to start the download.'; });
+start().catch(error => { if (controller) controller.isFailure = true; setTransferState('error'); showError(error); status.textContent = 'Unable to start the download.'; });

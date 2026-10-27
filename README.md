@@ -8,7 +8,7 @@ A Chrome Manifest V3 extension for Xtreme Download Manager integration and indep
 manifest.json       Extension configuration
 main.js             Background service worker entry point
 popup.html          Existing XDM popup, including detected HLS playlists
-hls.html            FetchV download-panel structure, with XDM styling
+hls.html            XDM transfer card and settings drawer
 error.html          Legacy desktop connection page
 register.html       Desktop registration page
 src/
@@ -20,7 +20,7 @@ src/
 styles/             XDM styles and download-page light/dark styling
 assets/             Icons, images and icon font; no subfolders
 vendor/
-  fetchv/           Pinned FetchV loader, workers, muxers and local FFmpeg
+  stream/           Pinned FetchV loader, workers, muxers and local FFmpeg
   bootstrap/        Bootstrap behavior module; no Bootstrap CSS
 scripts/            Reproducible adapter for the FetchV loader snapshot
 tests/              Unit tests and isolated browser integration checks
@@ -40,9 +40,9 @@ No build step, npm installation, remote JavaScript, or FetchV website connection
 
 Detected playlists appear in the XDM popup under their resource filenames, such as `playlist.m3u8` and `video.m3u8`. Clicking one opens a local download tab. That tab reuses FetchV's Panel, Controller, Fetcher, workers, and muxers; the earlier independent Mediabunny download pipeline has been replaced.
 
-Like FetchV, downloading starts automatically. The page shows the file name, resolution, a slim progress bar, pill badges for segment counts, downloaded size and speed, and labeled action buttons for cancellation, pause/resume, saving, settings, and downloads history. Completed-part saving and fragment retry/skip controls are retained from the reference implementation where applicable.
+Downloading starts automatically. XDM's focused transfer card shows the file name, source, resolution, Download / Assemble / Save stages, a slim progress bar, and three metric pills for downloaded size, transfer rate and parts. Labeled controls provide cancellation, pause/resume, saving, settings, cache clearing and downloads history. Completed-part saving and fragment retry/skip controls are retained from the reference implementation where applicable.
 
-The settings panel follows the reference order and behavior:
+The settings drawer groups the existing preferences into quality and performance, saving and storage, and display. It supports keyboard navigation, Escape to close, focus restoration, and narrow screens. Light and dark themes apply to both the card and drawer.
 
 | Setting | Behavior / initial default |
 | --- | --- |
@@ -77,8 +77,12 @@ Run `npm run test:browser` for the browser matrix, or `node tests/browser-smoke.
 
 The matrix exercises TS/fMP4/byte-range HLS, separate audio, AES-128 with a Chrome user agent, remembered resolution, actual request concurrency, Auto Save, file naming, cache clearing, theme switching, live rejection, and the real browser downloads API. Saved MP4s are checked for duration, resolution, audio/video tracks, and decoding. The tests exercise the production downloads API unchanged; the cache countdown is accelerated only in the cache test. Screenshots and saved fixtures are retained in the printed temporary folders for inspection.
 
+The manual-cache scenario also sends 1,001 assembly-progress updates and checks that the card and toolbar do not move. Run `node tests/browser-smoke.mjs --fixture=automatic-default --without-reference --lifecycle` to check a runtime copy without the root `FetchV/` reference folder, simultaneous desktop/HLS request observation, CSP-safe image fallbacks, and extension reload diagnostics.
+
+The browser suite checks drawer focus and Escape behavior, stage completion, real preference changes and renaming, and the card and drawer at a 320px viewport. It captures desktop and mobile screenshots of the transfer card and settings drawer in the temporary run directory.
+
 For manual checks, verify automatic saving to the browser's configured Downloads location and on-demand cache clearing with a real site's playlist, then verify native XDM downloads and context-menu actions with XDM desktop running.
 
 ## Vendored source
 
-See `vendor/fetchv/README.md` for the public source snapshot, retained upstream files, exact adaptation boundaries, and checksums. `npm run vendor:fetchv` regenerates the local loader module from the pinned upstream snapshot without network access. The Bootstrap behavior module and icon font retain their MIT license notices under `vendor/bootstrap`.
+See `vendor/stream/README.md` for the public source snapshot, retained upstream files, exact adaptation boundaries, and checksums. `npm run vendor:fetchv` regenerates the local loader module from the pinned upstream snapshot without network access. The Bootstrap behavior module and icon font retain their MIT license notices under `vendor/bootstrap`.

@@ -1,17 +1,5 @@
-﻿/* FetchV's panel structure, styled with XDM's shared light/dark design tokens. */
+/* Shared utility styles required by the bundled downloader and its dialogs. */
 html, body { width: 100%; min-width: 320px; max-width: none; min-height: 100%; }
-.download-shell { max-width: 1040px; margin: 32px auto; padding: 0 24px; }
-.download-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; }
-.download-brand { display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 650; }
-.download-brand img { width: 36px; height: 36px; }
-.download-card { border: 1px solid var(--gb); border-radius: var(--radius-xl); background: var(--gl); box-shadow: var(--sh); backdrop-filter: blur(16px); overflow: hidden; }
-.download-card-heading { display: flex; align-items: center; gap: 12px; padding: 15px 24px; border-bottom: 1px solid var(--gb); }
-.download-card-heading > span { color: var(--c1); font-size: 11px; font-weight: 700; letter-spacing: 1px; }
-.download-card-heading h1 { margin: 0; font-size: 16px; font-weight: 500; }
-#container { padding: 28px 24px 8px; }
-.download-status, .download-note { text-align: center; color: var(--mut); padding: 0 20px; }
-.download-note { font-size: 11px; margin: 16px 0 20px; }
-.download-error { color: var(--error); padding: 12px 20px; background: var(--error-bg); margin: 12px 24px; border-radius: var(--radius-sm); }
 .d-none, [hidden] { display: none !important; }
 .d-flex { display: flex; } .d-block { display: block; }
 .flex-column { flex-direction: column; } .flex-wrap { flex-wrap: wrap; } .flex-grow-1 { flex-grow: 1; }
@@ -63,8 +51,6 @@ html, body { width: 100%; min-width: 320px; max-width: none; min-height: 100%; }
 .progress-bar-striped { background-image: linear-gradient(45deg,#ffffff12 25%,transparent 25%,transparent 50%,#ffffff12 50%,#ffffff12 75%,transparent 75%,transparent); background-size: 20px 20px; }
 .progress-bar-animated { animation: stripes 1s linear infinite; }
 @keyframes stripes { to { background-position: 20px 0; } }
-[selector="filename"] { max-width: min(640px, 55vw); }
-.filename-input { width: min(600px, 55vw); }
 .form-control, .form-select { border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: var(--radius-sm); font: inherit; padding: 7px 10px; }
 input[type="checkbox"].form-check-input { appearance: none; width: 38px; height: 22px; border-radius: 14px; background: var(--line); border: 1px solid var(--gb); position: relative; vertical-align: middle; flex-shrink: 0; cursor: pointer; transition: background .15s; }
 input[type="checkbox"].form-check-input::after { content: ''; width: 16px; height: 16px; background: var(--mut); border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: transform .15s; }
@@ -72,8 +58,6 @@ input[type="checkbox"].form-check-input:checked { background: var(--btn); }
 input[type="checkbox"].form-check-input:checked::after { transform: translateX(16px); background: white; }
 input[type="radio"].form-check-input { appearance: auto; width: 17px; height: 17px; accent-color: var(--btn); }
 .form-check-input:disabled { opacity: .4; cursor: default; }
-.option-label { width: 170px; color: var(--mut); }
-[selector="collapse-option"] > div { border: 1px solid var(--gb); background: var(--sf); }
 [selector="thread"] { display: inline-flex; align-items: center; }
 [selector="thread"].text-danger { color: var(--c1); }
 .collapse:not(.show) { display: none; } .collapsing { height: 0; overflow: hidden; transition: height .25s ease; }
@@ -95,10 +79,14 @@ input[type="radio"].form-check-input { appearance: auto; width: 17px; height: 17
 .alert { padding: 12px; border: 1px solid var(--gb); border-radius: var(--radius-md); }
 .alert-warning { background: var(--error-bg); color: var(--c1); }
 .spinner-border { display: inline-block; width: 32px; height: 32px; border: 3px solid var(--line); border-top-color: var(--c1); border-radius: 50%; animation: spin 1s linear infinite; }
+.spinner-border-sm { width: 14px; height: 14px; border-width: 2px; flex: 0 0 auto; }
+.assembly-status { display: flex; align-items: center; justify-content: flex-start; gap: 8px; height: 24px; margin: 0; color: var(--mut); font-size: 11px; visibility: hidden; }
+.assembly-status[data-active="true"] { visibility: visible; }
+#assemblyPercent { width: 4ch; text-align: right; font-variant-numeric: tabular-nums; }
+.download-card[data-phase="assembling"] .progress-bar { animation: none; transition: none; background-image: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 video { border-radius: var(--radius-md); max-height: 240px; background: var(--bg); }
 @media (min-width: 576px) { .justify-content-sm-start { justify-content: flex-start; } .flex-sm-grow-0 { flex-grow: 0; } .mb-sm-0 { margin-bottom: 0; } }
-@media (max-width: 575px) { .download-shell { padding: 0 10px; margin-top: 16px; } #container { padding: 20px 12px 8px; } .download-brand { font-size: 13px; } .option-label { width: 110px; margin-right: 12px; text-align: left; } [selector="collapse-option"] .ps-4 { padding-left: 0; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 @font-face{font-family:xdm-icons;src:url('../assets/bootstrap-icons.woff2') format('woff2');font-display:block;}
 .bi::before{display:inline-block;font-family:xdm-icons!important;font-style:normal;font-weight:normal;line-height:1;vertical-align:-.125em;}
@@ -128,24 +116,124 @@ video { border-radius: var(--radius-md); max-height: 240px; background: var(--bg
 .bi-check-circle-fill::before{content:"\f26a";}
 .bi-x-lg::before{content:"\f659";}
 
-#downloadTheme { color: var(--ink); background: var(--sf); border: 1px solid var(--line); }
-[selector="thread"] .bi { display: none; }
-[selector="thread"]::before { content: attr(data-thread); display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border: 1px solid var(--line); border-radius: 4px; color: var(--ink); font: 600 12px system-ui; background: var(--sf); }
-[selector="thread"].text-danger::before { color: var(--bg); background: var(--c1); border-color: var(--c1); }
 
-/* Compact, labeled download controls and live statistics. */
-.download-actions { gap: 8px; margin-top: 4px; }
-.download-actions .btn { min-width: 104px; min-height: 36px; margin: 0; font-size: 12px; font-weight: 550; line-height: 1.2; box-shadow: none; }
-.download-actions .btn:hover:not(:disabled) { border-color: var(--mut); background: var(--primary-light); }
-.download-actions [selector="save"] { color: var(--c2); background: var(--primary-light); border-color: color-mix(in srgb, var(--c2) 30%, var(--line)); }
-.button-label { white-space: nowrap; }
-.download-stats { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 12px auto 22px; }
-.stat-pill { display: inline-flex; align-items: center; gap: 9px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--sf); white-space: nowrap; }
-.stat-label { color: var(--mut); font-size: 10px; font-weight: 550; letter-spacing: .35px; text-transform: uppercase; }
-.stat-value { color: var(--ink); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Focused transfer card. Colors follow XDM's shared theme tokens. */
+.download-shell { max-width: 928px; margin: 52px auto; padding: 0 32px; }
+.download-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 30px; }
+.download-brand { display: flex; align-items: center; gap: 12px; }
+.download-brand img { width: 34px; height: 34px; border-radius: 9px; }
+.download-brand strong { display: block; font-size: 16px; font-weight: 700; letter-spacing: .04em; line-height: 1.2; }
+.download-brand span { display: block; margin-top: 3px; color: var(--mut); font-size: 11px; }
+#downloadTheme { min-height: 34px; padding: 6px 12px; color: var(--mut); background: var(--sf); border: 1px solid var(--line); font-size: 11px; }
+.download-card { background: var(--gl); border: 1px solid var(--gb); border-radius: 22px; box-shadow: var(--sh); backdrop-filter: blur(16px); overflow: hidden; }
+.download-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 28px; border-bottom: 1px solid var(--line); }
+.eyebrow { color: var(--mut); font-size: 10px; font-weight: 650; letter-spacing: .12em; }
+.transfer-state { display: inline-flex; align-items: center; gap: 7px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: 11px; color: var(--mut); background: var(--sf); }
+.transfer-state::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.download-card[data-state="downloading"] .transfer-state, .download-card[data-state="assembling"] .transfer-state, .download-card[data-state="saving"] .transfer-state { color: var(--c2); background: var(--primary-light); border-color: color-mix(in srgb, var(--c2) 22%, transparent); }
+.download-card[data-state="saved"] .transfer-state { color: var(--success); background: var(--success-bg); border-color: var(--success-border); }
+.download-card[data-state="paused"] .transfer-state, .download-card[data-state="ready"] .transfer-state { color: var(--c1); }
+.download-card[data-state="error"] .transfer-state { color: var(--error); }
+#container { padding: 30px 28px 0; }
+.preparing-message { min-height: 220px; display: grid; place-items: center; color: var(--mut); }
+.transfer-file { display: flex; align-items: flex-start; gap: 20px; margin-bottom: 32px; }
+.file-art { position: relative; width: 68px; min-height: 82px; flex: 0 0 68px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 2px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--c1) 22%, var(--line)); color: var(--c1); background: color-mix(in srgb, var(--c1) 8%, transparent); }
+.file-art > .bi { font-size: 30px; }
+.file-art > span { font-size: 9px; font-weight: 700; letter-spacing: .12em; }
+.file-details { min-width: 0; flex: 1; padding-top: 1px; }
+[selector="filename"] { max-width: 100%; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); font-size: clamp(18px, 2.6vw, 25px); font-weight: 600; letter-spacing: -.035em; line-height: 1.35; }
+.filename-input { width: 100%; min-width: 0; margin-bottom: 3px; }
+.file-metadata { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-top: 7px; color: var(--mut); font-size: 11px; }
+#sourceHost { max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.metadata-dot { opacity: .5; }
+.file-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+.file-tools .btn { min-height: 28px; padding: 4px 9px; font-size: 10px; border-color: var(--line); background: transparent; }
+.transfer-preview { margin: 0 0 24px; }
+.transfer-preview video { display: block; max-height: 300px; border: 1px solid var(--line); }
+.transfer-stages { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; list-style: none; padding: 0; margin: 0 0 26px; }
+.transfer-stages li { display: flex; align-items: center; gap: 9px; padding-bottom: 13px; border-bottom: 2px solid var(--line); color: var(--mut); font-size: 12px; }
+.stage-marker { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; flex: 0 0 24px; border: 1px solid var(--line); border-radius: 50%; font-size: 10px; font-variant-numeric: tabular-nums; }
+.transfer-stages li[aria-current="step"] { color: var(--c2); border-color: var(--c2); font-weight: 600; }
+.transfer-stages li[aria-current="step"] .stage-marker { color: white; border-color: var(--btn); background: var(--btn); }
+.transfer-stages li[data-complete="true"] { color: var(--success); border-color: var(--success-border); }
+.transfer-stages li[data-complete="true"] .stage-marker { border-color: var(--success-border); background: var(--success-bg); font-size: 0; }
+.transfer-stages li[data-complete="true"] .stage-marker::before { content: '\f26e'; font-family: xdm-icons; font-size: 12px; }
+.transfer-progress-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; color: var(--mut); font-size: 11px; }
+#transferPercent { color: var(--ink); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.progress { height: 6px; max-width: none; margin: 0; border: none; border-radius: 999px; background: var(--line); }
+.progress .progress-bar { color: transparent; font-size: 0; background-image: none; animation: none; border-radius: inherit; }
+.download-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 20px 0 28px; }
+.stat-pill { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--sf); }
+.stat-label { font-size: 10px; color: var(--mut); }
+.stat-value { color: var(--ink); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .stat-divider { color: var(--mut); margin: 0 3px; }
-.progress { border-radius: 999px; }
-.progress .progress-bar { font-size: 10px; line-height: 1; }
-[selector="file-icon"] .display-1 { font-size: 60px; line-height: 1.25; }
-[selector="filename"] + div + .btn, [selector="open-source"], [selector="rename-confirm"] { font-size: 11px; padding: 6px 9px; }
-.bi-trash3::before{content:"\f78b";}
+.download-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 22px; margin-bottom: 20px; border-top: 1px solid var(--line); }
+.transfer-primary-actions, .transfer-secondary-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.download-actions .btn { min-width: 104px; min-height: 36px; margin: 0; padding: 7px 13px; border-color: var(--line); font-size: 11px; font-weight: 550; box-shadow: none; }
+.download-actions .btn:hover:not(:disabled) { border-color: var(--mut); }
+.download-actions .transfer-primary { background: var(--btn); color: #fff; border-color: var(--btn); }
+.download-actions .transfer-primary:hover:not(:disabled) { background: color-mix(in srgb, var(--btn) 88%, black); }
+.download-actions .transfer-secondary-actions .btn { min-width: 100px; background: transparent; color: var(--mut); }
+.button-label { white-space: nowrap; }
+.download-card[data-state="saved"] [selector="cancel"] { display: none !important; }
+.transfer-footer { padding: 0 28px 18px; }
+.download-status { min-height: 36px; margin: 4px 0 0; padding: 0; text-align: left; color: var(--mut); font-size: 11px; line-height: 18px; overflow-wrap: anywhere; }
+.download-note { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--mut); margin: 20px 0; font-size: 11px; text-align: center; }
+.download-note .bi { font-size: 13px; }
+.download-error { margin: 8px 0 0; padding: 10px 12px; border-radius: 8px; color: var(--error); background: var(--error-bg); font-size: 12px; overflow-wrap: anywhere; }
+[selector="clear-cache-status"], [selector="clear-cache-end"] { color: var(--mut); font-size: 10px; text-align: left; margin: 8px 0 0; }
+.bi-trash3::before { content: '\f78b'; }
+
+/* Modal settings drawer: native focus management, Escape and backdrop support. */
+html:has(.settings-drawer[open]) { overflow: hidden; }
+.settings-drawer { position: fixed; inset: 0 0 0 auto; width: 420px; max-width: 100%; height: 100dvh; max-height: none; margin: 0; padding: 0; border: 0; border-left: 1px solid var(--line); border-radius: 20px 0 0 20px; background: var(--bg); color: var(--ink); box-shadow: -12px 0 60px #0002; overflow-y: auto; }
+.settings-drawer[open] { display: flex; flex-direction: column; animation: drawer-in .18s ease-out; }
+.settings-drawer::backdrop { background: #050b1866; backdrop-filter: blur(3px); }
+.settings-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 28px 24px 12px; position: sticky; top: 0; z-index: 1; background: var(--bg); border-bottom: 1px solid var(--line); }
+.settings-heading h2 { font-size: 21px; font-weight: 600; letter-spacing: -.035em; margin: 6px 0 0; }
+.drawer-close { min-height: 30px; width: 30px; padding: 5px; background: var(--sf); border-color: var(--line); color: var(--mut); }
+.settings-description { padding: 0 24px; margin: 12px 0 8px; color: var(--mut); font-size: 11px; }
+.settings-body { flex: 1; padding: 0 24px 24px; }
+.settings-section { padding-top: 24px; }
+.settings-section h3 { margin: 0 0 8px; font-size: 10px; color: var(--mut); font-weight: 650; letter-spacing: .09em; text-transform: uppercase; }
+.setting-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-width: 0; padding: 15px 0; border-bottom: 1px solid var(--line); cursor: default; }
+.setting-row > :first-child { min-width: 0; }
+.setting-label { display: block; font-weight: 550; font-size: 12px; }
+.setting-row p, .setting-description { display: block; margin: 4px 0 0; color: var(--mut); font-size: 10px; line-height: 1.5; font-weight: 400; }
+.setting-row .form-select { max-width: 140px; font-size: 11px; }
+.setting-row .form-check-input { margin: 0; }
+.settings-drawer .thread-choices { display: flex; gap: 4px; flex-shrink: 0; }
+.settings-drawer [selector="thread"] { display: inline-flex; align-items: center; justify-content: center; width: 29px; height: 29px; padding: 0; border: 1px solid var(--line); border-radius: 7px; background: var(--sf); color: var(--mut); font-family: inherit; font-size: 11px; font-weight: 550; cursor: pointer; }
+.settings-drawer [selector="thread"]::before { content: none; }
+.settings-drawer [selector="thread"].text-danger { color: white; border-color: var(--btn); background: var(--btn); }
+.naming-setting { min-width: 0; margin: 0; padding: 18px 0 0; border: none; display: flex; flex-wrap: wrap; gap: 8px; }
+.naming-setting legend { padding: 16px 0 0; font-size: 12px; font-weight: 550; }
+.naming-setting label { display: flex; align-items: center; gap: 7px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--mut); font-size: 11px; cursor: pointer; }
+.naming-setting label:has(:checked) { color: var(--c2); border-color: color-mix(in srgb, var(--c2) 40%, var(--line)); background: var(--primary-light); }
+.naming-setting .form-check-input { margin: 0; }
+.settings-footer { display: flex; align-items: center; gap: 8px; padding: 16px 24px; border-top: 1px solid var(--line); color: var(--mut); background: var(--sf); font-size: 10px; }
+.settings-footer .bi { color: var(--success); }
+@keyframes drawer-in { from { transform: translateX(25px); } to { transform: translateX(0); } }
+@media (max-width: 600px) {
+  .download-shell { padding: 0 16px; margin: 24px auto; }
+  .download-header { margin-bottom: 22px; }
+  .download-card { border-radius: 16px; }
+  .download-card-heading { padding: 16px 18px; }
+  #container { padding: 24px 18px 0; }
+  .transfer-file { gap: 13px; margin-bottom: 26px; }
+  .file-art { width: 50px; flex-basis: 50px; min-height: 68px; border-radius: 11px; }
+  .file-art > .bi { font-size: 25px; }
+  .transfer-stages { gap: 10px; }
+  .transfer-stages li { font-size: 11px; gap: 6px; }
+  .stage-marker { width: 21px; height: 21px; flex-basis: 21px; }
+  .download-stats { gap: 7px; margin: 18px 0 24px; }
+  .stat-pill { padding: 10px 9px; gap: 5px; flex-direction: column; align-items: flex-start; border-radius: 10px; }
+  .stat-label { font-size: 9px; }
+  .stat-value { font-size: 12px; }
+  .download-actions { align-items: stretch; gap: 10px; padding-top: 18px; }
+  .transfer-primary-actions, .transfer-secondary-actions { flex: 1 1 100%; }
+  .download-actions .btn { flex: 1; min-width: 0; }
+  .transfer-footer { padding: 0 18px 14px; }
+  .settings-drawer { width: min(420px, 100%); }
+}

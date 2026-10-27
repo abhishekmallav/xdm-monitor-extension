@@ -112,10 +112,12 @@ export default class App {
         if (!tab.url || !/^https?:/.test(tab.url)) {
             return;
         }
-        chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            files: ["src/content/ping.js"],
-        }).then(() => this.logger.log("script injected")).catch(() => {});
+        if (changeInfo.status === 'complete') {
+            chrome.scripting.executeScript({
+                target: { tabId },
+                files: ["src/content/ping.js"],
+            }).then(() => this.logger.log("script injected")).catch(() => {});
+        }
         if (!this.isMonitoringEnabled()) {
             return;
         }

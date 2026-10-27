@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <script src="src/ui/brand.js"></script>
   <title>XDM Browser Monitor</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="styles/styles.css">
@@ -11,7 +12,7 @@
   <!-- Header: XDM Logo and title, more formats, clear items, refresh -->
   <header class="app-header">
     <div class="brand-wrapper">
-      <img src="assets/xdm-logo-orange.png" alt="XDM Logo" class="brand-icon" onerror="this.src='assets/icon16.png'">
+      <img src="assets/xdm-logo-orange.png" alt="XDM Logo" class="brand-icon" data-fallback-src="assets/icon16.png">
       <span class="brand-title">XDM Browser Monitor</span>
     </div>
     <div class="header-actions">

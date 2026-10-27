@@ -21,6 +21,21 @@ const fixture = process.argv.find(arg => arg.startsWith('--fixture='))?.split('=
 const automatic = ['auto-save', 'automatic-default'].includes(fixture);
 const repo = fileURLToPath(new URL('../', import.meta.url));
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xdm-browser-smoke-'));
+let extensionRoot = repo;
+if (process.argv.includes('--without-reference') || process.argv.includes('--lifecycle')) {
+    extensionRoot = path.join(root, 'extension');
+    fs.mkdirSync(extensionRoot);
+    for (const name of ['manifest.json', 'main.js', 'popup.html', 'hls.html', 'error.html', 'disabled.html', 'register.html', 'src', 'styles', 'assets', 'vendor']) {
+        fs.cpSync(path.join(repo, name), path.join(extensionRoot, name), { recursive: true });
+    }
+    assert(!fs.existsSync(path.join(extensionRoot, 'FetchV')));
+    if (process.argv.includes('--lifecycle')) fs.appendFileSync(path.join(extensionRoot, 'main.js'), `
+import RequestWatcher from './src/background/request-watcher.js';
+globalThis.nativeObserver = new RequestWatcher(data => globalThis.nativeObserved = data);
+nativeObserver.mediaTypes = ['application/vnd.apple.mpegurl'];
+nativeObserver.register();
+`);
+}
 const profile = path.join(root, 'profile');
 const downloads = path.join(root, 'downloads');
 fs.mkdirSync(profile); fs.mkdirSync(downloads);
@@ -90,7 +105,7 @@ async function until(fn, description, timeout = 25000) {
 }
 try {
     browser = spawn(binary, ['--headless=new', '--remote-debugging-port=0', '--user-data-dir=' + profile,
-        '--load-extension=' + repo, '--disable-extensions-except=' + repo, '--no-first-run',
+        '--load-extension=' + extensionRoot, '--disable-extensions-except=' + extensionRoot, '--no-first-run',
         ...(fixture === 'aes' ? ['--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36'] : []), '--disable-background-networking', '--disable-component-update', '--disable-sync', 'about:blank'],
     { windowsHide: true, stdio: ['ignore', 'ignore', 'pipe'] });
     let stderr = ''; browser.stderr.on('data', data => { stderr += data; });
@@ -101,10 +116,13 @@ try {
     }, 'browser startup');
     socket = new WebSocket(`ws://127.0.0.1:${debug[0]}${debug[1]}`);
     await new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject; });
-    let nextId = 0; const pending = new Map();
+    let nextId = 0; const pending = new Map(), diagnostics = [];
     socket.onmessage = event => {
         const message = JSON.parse(event.data);
-        if (!message.id) return;
+        if (!message.id) {
+            if (['Runtime.exceptionThrown', 'Log.entryAdded'].includes(message.method)) diagnostics.push(message);
+            return;
+        }
         const handler = pending.get(message.id); if (!handler) return;
         pending.delete(message.id);
         if (message.error) handler.reject(new Error(JSON.stringify(message.error))); else handler.resolve(message.result);
@@ -120,16 +138,31 @@ try {
         if (result.exceptionDetails) throw new Error(JSON.stringify(result.exceptionDetails));
         return result.result.value;
     }
+    async function monitor(session) {
+        await command('Runtime.enable', {}, session);
+        await command('Log.enable', {}, session).catch(() => {});
+    }
+    function checkDiagnostics() {
+        const relevant = diagnostics.filter(message => /Failed to add listener|inline event handler|Content Security Policy/i.test(JSON.stringify(message)));
+        assert.deepEqual(relevant, [], 'Listener or CSP errors: ' + JSON.stringify(relevant));
+    }
     const targets = async () => (await command('Target.getTargets')).targetInfos;
     const worker = await until(async () => (await targets()).find(t => t.type === 'service_worker' && t.url.endsWith('/main.js')), 'extension worker');
     const workerSession = (await command('Target.attachToTarget', { targetId: worker.targetId, flatten: true })).sessionId;
+    await monitor(workerSession);
     const extension = new URL(worker.url).origin === 'null' ? worker.url.replace(/main\.js$/, '') : '';
     assert(extension.startsWith('chrome-extension://'));
     await until(() => evaluate(workerSession, `typeof chrome !== 'undefined' && !!chrome.tabs`), 'extension API initialization');
     const source = await evaluate(workerSession, `chrome.tabs.create({url:'http://127.0.0.1:${port}/watch',active:true})`);
     await until(async () => (await evaluate(workerSession, `chrome.storage.session.get('hlsStreams')`)).hlsStreams?.[source.id]?.length, 'HLS detection');
+    if (process.argv.includes('--lifecycle')) {
+        const native = await until(()=>evaluate(workerSession, `globalThis.nativeObserved`),'desktop request observer alongside HLS');
+        assert.equal(native.requestHeaders.Authorization[0], 'Bearer fixture');
+        assert.equal(native.tabId, String(source.id));
+    }
     const popup = await evaluate(workerSession, `chrome.tabs.create({url:chrome.runtime.getURL('popup.html'),active:false})`);
     const popupSession = (await command('Target.attachToTarget', { targetId: (await until(async () => (await targets()).find(t => t.url === extension + 'popup.html'), 'popup')).targetId, flatten: true })).sessionId;
+    await monitor(popupSession);
     await until(() => evaluate(popupSession, `document.querySelectorAll('.media-title-btn').length`), 'popup HLS row');
     assert((await evaluate(popupSession, `document.getElementById('mediaCount').textContent`)).includes('1 item'));
     const chosen = fixture === 'threads' ? { threads: 4 } : fixture === 'auto-save' ? { autoSave: true, clearCache: false, filenameType: 'filename' } : fixture === 'quality' ? { defaultResolution: '160x90' } : {};
@@ -138,6 +171,15 @@ try {
     await evaluate(popupSession, `localStorage.setItem('xdm-hls-options',${JSON.stringify(JSON.stringify(prefs))});document.querySelector('.media-title-btn').click()`);
     const downloader = await until(async () => (await targets()).find(t => t.url.startsWith(extension + 'hls.html?')), 'download tab');
     const downloadSession = (await command('Target.attachToTarget', { targetId: downloader.targetId, flatten: true })).sessionId;
+    await monitor(downloadSession);
+    await command('Emulation.setDeviceMetricsOverride', {width:1280,height:900,deviceScaleFactor:1,mobile:false}, downloadSession);
+    if (fixture === 'threads') {
+        await until(()=>evaluate(downloadSession, `!!document.querySelector('[selector="pause"]')?.onclick`),'pause control');
+        await evaluate(downloadSession, `document.querySelector('[selector="pause"]').click()`);
+        assert.equal(await evaluate(downloadSession, `document.querySelector('.download-card').dataset.state`),'paused');
+        await evaluate(downloadSession, `document.querySelector('[selector="start"]').click()`);
+        assert.equal(await evaluate(downloadSession, `document.querySelector('.download-card').dataset.state`),'downloading');
+    }
     if (fixture === 'live') {
         await until(() => evaluate(downloadSession, `(document.querySelector('[selector="error"]')?.textContent + document.getElementById('downloadError').textContent).includes('Live or unfinished')`), 'live rejection').catch(async error => { console.error(await evaluate(downloadSession, `document.body.innerText`)); console.error(requests.map(r=>r.url)); throw error; });
         assert(!requests.some(item => /\.(ts|m4s)$/.test(item.url)), 'Live segments should not be downloaded');
@@ -154,11 +196,17 @@ try {
     const defaults = await evaluate(downloadSession, `({tab:document.querySelector('[selector="tab-progress"]').checked,naming:document.querySelector('[selector="filename-type"][value="title"]').checked,save:document.querySelector('[selector="auto-save"]').checked,title:document.title})`);
     assert.equal(defaults.tab, true); assert.equal(defaults.naming, fixture !== 'auto-save'); assert.equal(defaults.save, automatic);
     assert(defaults.title.includes('Completed'));
-    await evaluate(downloadSession, `document.querySelector('[selector="options"]').click()`);
-    await wait(300);
     await command('Page.enable', {}, downloadSession);
     const screenshot = await command('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true }, downloadSession);
     fs.writeFileSync(path.join(root, 'downloader.png'), Buffer.from(screenshot.data, 'base64'));
+    assert.equal(await evaluate(downloadSession, `document.querySelector('.download-card').dataset.state`), automatic ? 'saved' : 'ready');
+    assert.equal(await evaluate(downloadSession, `document.querySelectorAll('.transfer-stages [data-complete="true"]').length`), automatic ? 3 : 2);
+    await evaluate(downloadSession, `document.querySelector('[selector="options"]').click()`);
+    await until(()=>evaluate(downloadSession, `document.getElementById('downloadSettings').open`),'settings drawer');
+    await evaluate(downloadSession, `Promise.all(document.getElementById('downloadSettings').getAnimations().map(animation=>animation.finished))`);
+    assert(await evaluate(downloadSession, `document.getElementById('downloadSettings').contains(document.activeElement) && document.querySelector('[selector="options"]').getAttribute('aria-expanded')==='true'`));
+    const drawerScreenshot = await command('Page.captureScreenshot', {format:'png'}, downloadSession);
+    fs.writeFileSync(path.join(root,'settings-drawer.png'),Buffer.from(drawerScreenshot.data,'base64'));
     const theme = await evaluate(downloadSession, `document.documentElement.dataset.theme`);
     await evaluate(downloadSession, `document.getElementById('downloadTheme').click()`);
     assert.notEqual(await evaluate(downloadSession, `document.documentElement.dataset.theme`), theme);
@@ -171,12 +219,52 @@ try {
     if (fixture === 'threads') assert(maxSegments >= 3 && maxSegments <= 4, 'Thread setting should control concurrent segment requests');
     const modern = await evaluate(downloadSession, `({pills:document.querySelectorAll('.download-stats .stat-pill').length,bar:document.querySelector('.progress').getBoundingClientRect().height,labels:[...document.querySelectorAll('.download-actions .btn')].every(button=>!!button.querySelector('.button-label'))})`);
     assert(modern.pills >= 3); assert(modern.bar <= 20); assert(modern.labels);
+    await command('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27},downloadSession);
+    await command('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27},downloadSession);
+    await until(()=>evaluate(downloadSession, `!document.getElementById('downloadSettings').open && document.activeElement===document.querySelector('[selector="options"]')`),'Escape closes drawer and restores focus');
+    const alternateCard = await command('Page.captureScreenshot', {format:'png',captureBeyondViewport:true}, downloadSession);
+    fs.writeFileSync(path.join(root,'transfer-alternate-theme.png'),Buffer.from(alternateCard.data,'base64'));
     if (fixture === 'manual-cache') {
+        await evaluate(downloadSession, `document.querySelector('[selector="rename"]').click();document.querySelector('[selector="filename-input"]').value='Renamed video';document.querySelector('[selector="filename-input"]').blur()`);
+        assert.equal(await evaluate(downloadSession, `document.querySelector('[selector="filename"]').textContent`),'Renamed video');
+        await evaluate(downloadSession, `document.querySelector('[selector="options"]').click();document.querySelector('[selector="thread"][data-thread="1"]').click();document.querySelector('[selector="preview-switch"]').click();document.querySelector('[selector="filename-type"][value="filename"]').click();document.querySelector('[selector="auto-save"]').click();document.querySelector('[selector="tab-progress"]').click()`);
+        const preferences=await evaluate(downloadSession, `JSON.parse(localStorage.getItem('xdm-hls-options'))`);
+        assert.equal(preferences.threads,1);assert.equal(preferences.preview,true);assert.equal(preferences.filenameType,'filename');assert.equal(preferences.autoSave,true);assert.equal(preferences.tabProgress,false);
+        await evaluate(downloadSession, `document.querySelector('[selector="options-close"]').click()`);
+        await command('Emulation.setDeviceMetricsOverride',{width:320,height:760,deviceScaleFactor:1,mobile:false},downloadSession);
+        assert(await evaluate(downloadSession, `document.documentElement.scrollWidth<=innerWidth && document.querySelector('.download-card').getBoundingClientRect().right<=innerWidth`),'Card must fit a narrow viewport');
+        const mobileCard=await command('Page.captureScreenshot',{format:'png',captureBeyondViewport:true},downloadSession);
+        fs.writeFileSync(path.join(root,'transfer-mobile.png'),Buffer.from(mobileCard.data,'base64'));
+        await evaluate(downloadSession, `document.querySelector('[selector="options"]').click()`);
+        await evaluate(downloadSession, `Promise.all(document.getElementById('downloadSettings').getAnimations().map(animation=>animation.finished))`);
+        assert.equal(await evaluate(downloadSession, `getComputedStyle(document.documentElement).overflowY`),'hidden','Background scrolling must be locked while the drawer is open');
+        assert(await evaluate(downloadSession, `document.getElementById('downloadSettings').getBoundingClientRect().width<=innerWidth`),'Drawer must fit a narrow viewport');
+        const mobileDrawer=await command('Page.captureScreenshot',{format:'png'},downloadSession);
+        fs.writeFileSync(path.join(root,'settings-mobile.png'),Buffer.from(mobileDrawer.data,'base64'));
+        await evaluate(downloadSession, `document.querySelector('[selector="options-close"]').click()`);
+        // Stress the actual styled assembly area with a large burst of muxer messages.
+        const assembly = await evaluate(downloadSession, `(async()=>{
+            const {installAssemblyUi}=await import('./src/hls/assembly-ui.js');
+            class Panel {setCompleted(){} setError(){}}
+            const panel=new Panel();panel.ctrl={isCompleted:true};panel.$pause={disabled:false};
+            const wrapper=document.getElementById('assemblyStatus'), card=document.querySelector('.download-card');
+            const before={height:card.getBoundingClientRect().height,top:document.querySelector('.download-actions').getBoundingClientRect().top};
+            const ui=installAssemblyUi(Panel,{document,wrapper,label:document.getElementById('assemblyLabel'),percentage:document.getElementById('assemblyPercent'),card,status:document.getElementById('downloadStatus')});
+            panel.loading();for(let i=0;i<=1000;i++)panel.setFileProgress(i/1000);
+            await new Promise(resolve=>setTimeout(resolve,150));
+            const progress=document.getElementById('assemblyPercent').textContent;
+            const during={height:card.getBoundingClientRect().height,top:document.querySelector('.download-actions').getBoundingClientRect().top};
+            panel.setFileProgressEnd();const busy=ui.active;panel.setCompleted();
+            return {before,during,progress,busy,finished:!ui.active};
+        })()`);
+        assert.deepEqual(assembly.before,assembly.during,'Assembly progress must not shift page layout');
+        assert.equal(assembly.progress,'100%');assert(assembly.busy && assembly.finished);
         assert.equal(await evaluate(downloadSession, `document.getElementById('clearDownloadCache').disabled`),false);
         await evaluate(downloadSession, `document.getElementById('clearDownloadCache').click()`);
         assert(await evaluate(downloadSession, `document.getElementById('downloadStatus').textContent.startsWith('Cache cleared.') && document.querySelector('[selector="save"]').disabled && document.getElementById('clearDownloadCache').disabled`));
         assert.equal(fs.readdirSync(downloads).length,0);
-        console.log(JSON.stringify({result:'PASS',fixture,checks:'On-demand cache clearing, no accidental save, safe disabled controls'}));
+        checkDiagnostics();
+        console.log(JSON.stringify({result:'PASS',fixture,checks:'Assembly progress burst without layout shift, on-demand cache clearing, no accidental save, safe disabled controls, no listener/CSP diagnostics'}));
         await command('Browser.close').catch(()=>{});
         break downloadScenario;
     }
@@ -209,7 +297,28 @@ try {
     const decode = spawnSync('ffmpeg', ['-v','error','-i',path.join(downloads,mp4),'-f','null','-'], {encoding:'utf8'});
     assert.equal(decode.status,0,decode.stderr);
     assert(types.includes('video') && types.includes('audio'));
-    console.log(JSON.stringify({ result: 'PASS', fixture, maxSegments, checks: 'HLS detection, existing popup, new tab, FetchV loader/muxers, header replay, settings defaults, light/dark themes, real Chrome downloads API, audio/video output', screenshot: path.join(root, 'downloader.png'), mp4: path.join(downloads, mp4), requests: requests.length }));
+    if (process.argv.includes('--lifecycle')) {
+        const sourceTarget = await until(async () => (await targets()).find(t => t.url === 'http://127.0.0.1:' + port + '/watch'), 'source target');
+        const sourceSession = (await command('Target.attachToTarget', {targetId:sourceTarget.targetId,flatten:true})).sessionId;
+        await monitor(sourceSession);
+        await wait(1500); // Allow the keep-alive connection to be installed before reload.
+        for (const page of ['error.html','disabled.html','register.html']) {
+            await evaluate(workerSession, `chrome.tabs.create({url:chrome.runtime.getURL(${JSON.stringify(page)}),active:false})`);
+            const target=await until(async()=>(await targets()).find(t=>t.url===extension+page),page);
+            const session=(await command('Target.attachToTarget',{targetId:target.targetId,flatten:true})).sessionId;
+            await monitor(session);
+            await until(()=>evaluate(session, `!!document.querySelector('img.brand-icon')`),'brand image');
+            await evaluate(session, `document.querySelector('img.brand-icon').src='missing-logo-for-csp-test.png'`);
+            await until(()=>evaluate(session, `document.querySelector('img.brand-icon').src.endsWith('/assets/icon16.png')`),'external logo fallback');
+        }
+        await evaluate(workerSession, `setTimeout(()=>chrome.runtime.reload(),100);true`);
+        const replacement=await until(async()=>(await targets()).find(t=>t.type==='service_worker'&&t.url===worker.url&&t.targetId!==worker.targetId),'worker after extension reload');
+        const session=(await command('Target.attachToTarget',{targetId:replacement.targetId,flatten:true})).sessionId;
+        await monitor(session);
+        await wait(1600);
+    }
+    checkDiagnostics();
+    console.log(JSON.stringify({ result: 'PASS', fixture, maxSegments, withoutReference:extensionRoot!==repo, lifecycle:process.argv.includes('--lifecycle'), checks: 'HLS detection, existing popup, new tab, local loader/muxers, header replay, settings defaults, light/dark themes, real Chrome downloads API, audio/video output, no listener/CSP diagnostics', screenshot: path.join(root, 'downloader.png'), mp4: path.join(downloads, mp4), requests: requests.length }));
     await command('Browser.close').catch(() => {});
     }
     }
