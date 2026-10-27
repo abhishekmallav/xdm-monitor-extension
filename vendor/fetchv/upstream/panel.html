@@ -1,0 +1,245 @@
+<div id="panel" class="d-none w-100">
+    <div selector="no-data" class="py-5 text-center">
+        <span class="display-1 text-warning-emphasis"><i class="bi bi-database-fill-x"></i></span>
+        <h5 class="pt-3 fw-light">No data detected by the application!</h5>
+    </div>
+    <div selector="has-data">
+        <div class="d-flex justify-content-center align-items-center flex-column">
+            <div selector="file-icon" class="position-relative">
+                <span class="display-1"><i class="bi bi-file-earmark"></i></span>
+                <span selector="file-icon-text" class="position-absolute bottom-0 end-0 px-2 py-1 mb-1 mb-sm-3 rounded-2 shadow-sm text-bg-purple">HLS</span>
+            </div>
+            <div selector="preview" class="d-none" style="width: 220px;">
+                <video selector="preview-video" controls class="w-100"></video>
+            </div>
+            <div selector="quality-dropdown" class="dropdown">
+                <span selector="quality" class="mb-2 fw-light">--</span>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-center align-items-center mb-3 mx-auto" style="max-width: 860px; min-width: 120px;">
+            <span class="text-nowrap badge text-bg-secondary me-2">File Name</span>
+            <div selector="filename" class="text-black-50 text-truncate me-1"></div>
+
+
+            <div class="flex-grow-1 flex-sm-grow-0"><input selector="filename-input" type="text" class="filename-input form-control d-none" value=""></div>
+
+            <button selector="rename" class="tooltip-toggle btn btn-light" data-bs-title="Rename" data-bs-placement="right"><i class="bi bi-pencil-square"></i></button>
+            <button selector="rename-confirm" class="tooltip-toggle btn btn-light ms-2 d-none" data-bs-title="Confirm" data-bs-placement="right"><i class="bi bi-check-lg"></i></button>
+            <button selector="open-source" class="btn ms-1 d-none"><i class="bi bi-box-arrow-up-right"></i></button>
+        </div>
+
+
+        <div class="progress mx-auto" role="progressbar" style="height: 40px; max-width: 760px;">
+            <div selector="progress" class="progress-bar progress-bar-striped progress-bar-animated fs-6 fw-light" style="width: 0">0%</div>
+        </div>
+
+        <div class="d-flex justify-content-center align-items-center fs-5 pb-3 fw-light">
+            <div style="min-width: 105px;"><span selector="chunks-completed">0</span>/<span selector="chunks">0</span></div>
+            <span selector="size" class="text-end" style="min-width: 70px;">0MB</span>
+            <span selector="speed" class="ms-3">0KB/s</span>
+            <span selector="duration" class="d-none text-end" style="min-width: 88px;">00:00:00</span>
+        </div>
+
+
+        <div selector="error-frags" class="mb-5 alert alert-warning p-2 shadow-sm d-none">
+            <p class="text-center border-bottom border-warning-subtle pb-1"><i class="bi bi-exclamation-triangle"></i> The following fragment requests failed. You can retry the request or skip them!</p>
+            <div selector="error-frags-row" class="small overflow-y-auto overflow-x-hidden" style="max-height: 250px;"></div>
+            <div class="text-center py-2">
+                <button class="btn btn-primary me-3" selector="error-retry">Retry</button>
+                <button class="btn btn-success" selector="error-skip">Skip</button>
+            </div>
+        </div>
+
+
+        <div class="d-flex justify-content-center align-items-center flex-wrap mb-4">
+
+            <button selector="stop" type="button" class="tooltip-toggle btn btn-lg btn-light mx-2 shadow-sm border-light-subtle fs-3 text-danger mb-2 mb-sm-0 d-none" data-bs-title="Stop" data-bs-placement="bottom">
+                <i class="bi bi-stop-circle-fill"></i>
+            </button>
+
+            <button selector="cancel" type="button" class="tooltip-toggle btn btn-lg btn-light mx-2 shadow-sm border-light-subtle fs-3 text-danger mb-2 mb-sm-0" data-bs-title="Cancel" data-bs-placement="bottom">
+                <i class="bi bi-x-circle"></i>
+            </button>
+
+            <button selector="start" type="button" class="tooltip-toggle btn btn-lg btn-light mx-2 shadow-sm border-light-subtle fs-3 mb-2 mb-sm-0" data-bs-title="Resume Download" data-bs-placement="bottom">
+                <i class="bi bi-caret-right-fill"></i>
+            </button>
+
+            <button selector="pause" type="button" class="tooltip-toggle btn btn-lg btn-light mx-2 shadow-sm border-light-subtle fs-3 mb-2 mb-sm-0" data-bs-title="Pause" data-bs-placement="bottom">
+                <i class="bi bi-pause-fill"></i>
+            </button>
+
+            <button selector="save" type="button" class="tooltip-toggle btn btn-lg btn-light mx-2 shadow-sm border-light-subtle fs-3 mb-2 mb-sm-0 text-success" data-bs-title="Save" data-bs-placement="bottom">
+                <i class="bi bi-save-fill"></i>
+            </button>
+
+            <button selector="save-downloaded" type="button" class="tooltip-toggle btn btn-lg btn-light mx-2 shadow-sm border-light-subtle fs-3 mb-2 mb-sm-0" data-bs-title="Save Completed Parts" data-bs-placement="bottom">
+                <i class="bi bi-save"></i>
+            </button>
+
+            <button selector="options" type="button" class="tooltip-toggle btn btn-lg btn-light mx-2 shadow-sm border-light-subtle fs-3 mb-2 mb-sm-0" data-bs-title="Settings" data-bs-placement="bottom">
+                <i class="bi bi-gear-fill"></i>
+            </button>
+
+            <button selector="downloads-list" type="button" class="tooltip-toggle btn btn-lg btn-light mx-2 shadow-sm border-light-subtle fs-3 text-success mb-2 mb-sm-0 d-none" data-bs-title="Open downloads list" data-bs-placement="bottom">
+                <i class="bi bi-folder-symlink"></i>
+            </button>
+
+        </div>
+
+        <div selector="collapse-option" class="collapse mb-4 mx-auto" style="max-width: 760px;">
+            <div class="px-3 py-4 shadow rounded-3 border border-light-subtle position-relative">
+                <div selector="option-threads" class="d-flex justify-content-between justify-content-sm-start align-items-center py-2">
+                    <div class="option-label text-end me-4 fw-light text-nowrap">Download Threads</div>
+                    <div class="flex-grow-1 d-flex align-items-center justify-content-end justify-content-sm-start border-bottom py-1">
+                        <div class="fs-4 me-3">
+                            <span selector="thread" data-thread="1" class="me-2 cursor-pointer"><i class="bi bi-1-square-fill"></i></span>
+                            <span selector="thread" data-thread="2" class="me-2 cursor-pointer"><i class="bi bi-2-square-fill"></i></span>
+                            <span selector="thread" data-thread="3" class="me-2 cursor-pointer text-danger"><i class="bi bi-3-square-fill"></i></span>
+                            <span selector="thread" data-thread="4" class="me-2 cursor-pointer"><i class="bi bi-4-square-fill"></i></span>
+                        </div>
+                        <span class="text-secondary tooltip-toggle" data-bs-title="More threads may speed up the process (depending on your device and the bandwidth of the remote server) but will consume more bandwidth and system resources. Choose accordingly." data-bs-placement="right"><i class="bi bi-question-circle-fill"></i></span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-start align-items-center py-2">
+                    <div class="option-label text-end me-4 fw-light text-nowrap">Video Preview</div>
+                    <div class="flex-grow-1 d-flex align-items-center justify-content-end justify-content-sm-start border-bottom py-2">
+                        <div class="me-3">
+                            <label class="form-check form-switch ps-0 mb-0 border-2">
+                                <input selector="preview-switch" class="form-check-input fs-3 float-none ms-0 mt-0 cursor-pointer" type="checkbox" role="switch">
+                            </label>
+                        </div>
+                        <span class="text-secondary tooltip-toggle" data-bs-title="When enabled, the video preview will be displayed during the download." data-bs-placement="right"><i class="bi bi-question-circle-fill"></i></span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-start align-items-center py-2">
+                    <div class="option-label text-end me-4 fw-light text-nowrap">Auto Save</div>
+                    <div class="flex-grow-1 d-flex align-items-center justify-content-end justify-content-sm-start border-bottom py-2">
+                        <div class="me-3">
+                            <label class="form-check form-switch ps-0 mb-0 border-2">
+                                <input selector="auto-save" class="form-check-input fs-3 float-none ms-0 mt-0 cursor-pointer" type="checkbox" role="switch">
+                            </label>
+                        </div>
+                        <span class="text-secondary tooltip-toggle" data-bs-title="Automatically initiate the save when the download is complete." data-bs-placement="right"><i class="bi bi-question-circle-fill"></i></span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-start align-items-center py-2">
+                    <div class="option-label text-end me-4 fw-light text-nowrap">Clear Cache</div>
+                    <div class="flex-grow-1 d-flex align-items-center justify-content-end justify-content-sm-start border-bottom py-2">
+                        <div class="me-3">
+                            <label class="form-check form-switch ps-0 mb-0 border-2">
+                                <input selector="clear-cache" class="form-check-input fs-3 float-none ms-0 mt-0 cursor-pointer" type="checkbox" role="switch">
+                            </label>
+                        </div>
+                        <span class="text-secondary tooltip-toggle" data-bs-title="After saving the file, clear the cache" data-bs-placement="right"><i class="bi bi-question-circle-fill"></i></span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-start align-items-center py-2">
+                    <div class="option-label text-end me-4 fw-light text-nowrap">Tab Progress</div>
+                    <div class="flex-grow-1 d-flex align-items-center justify-content-end justify-content-sm-start border-bottom py-2">
+                        <div class="me-3">
+                            <label class="form-check form-switch ps-0 mb-0 border-2">
+                                <input selector="tab-progress" class="form-check-input fs-3 float-none ms-0 mt-0 cursor-pointer" type="checkbox" role="switch">
+                            </label>
+                        </div>
+                        <span class="text-secondary tooltip-toggle" data-bs-title="When enabled, the progress will be displayed on the current tab." data-bs-placement="right"><i class="bi bi-question-circle-fill"></i></span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-start align-items-center py-2">
+                    <div class="option-label text-end me-4 fw-light text-nowrap">Resolution</div>
+                    <div class="flex-grow-1 d-flex flex-wrap align-items-center justify-content-end justify-content-sm-start border-bottom py-2">
+                        <div class="d-flex align-items-center mb-2 mb-sm-0">
+                            <div class="me-3 border-2">
+                                <select selector="resolution" class="form-select" disabled>
+                                    <option>--</option>
+                                </select>
+                            </div>
+                            <span class="text-secondary tooltip-toggle" data-bs-title="Available when the source m3u8 file provides multiple resolutions. The default is to download the highest resolution." data-bs-placement="right"><i class="bi bi-question-circle-fill"></i></span>
+                        </div>
+                        <div class="d-flex align-items-center ps-4">
+                            <div class="me-2">
+                                <label class="form-check form-switch ps-0 mb-0 border-2">
+                                    <input selector="default-resolution" class="form-check-input fs-3 float-none ms-0 mt-0 cursor-pointer" type="checkbox" role="switch">
+                                </label>
+                            </div>
+                            <span class="me-3">Default</span>
+                            <span class="text-secondary tooltip-toggle" data-bs-title="When this option is enabled, the next time you download, if the target has this resolution available, it will be automatically selected." data-bs-placement="right"><i class="bi bi-question-circle-fill"></i></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-start align-items-center py-2">
+                    <div class="option-label text-end me-4 fw-light text-nowrap">File Naming</div>
+                    <div class="flex-grow-1 border-bottom py-2">
+                        <div class="d-flex flex-wrap align-items-center justify-content-end justify-content-sm-start border-2">
+
+                            <label class="d-flex align-items-center me-4 mb-2 mb-sm-0">
+                                <input selector="filename-type" class="form-check-input fs-4 mt-0" type="radio" name="filenameType" value="title">
+                                <span class="ps-2">Webpage Title</span>
+                            </label>
+
+                            <label class="d-flex align-items-center me-4">
+                                <input selector="filename-type" class="form-check-input fs-4 mt-0" type="radio" name="filenameType" value="filename">
+                                <span class="ps-2">Resource Filename</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+
+                <button selector="options-close" class="btn btn-close position-absolute top-0 end-0 mt-1 me-1"></button>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <p selector="clear-cache-status" class="d-none">Cache will be cleared(<span selector="clear-cache-timer">0</span>)</p>
+            <p selector="clear-cache-end" class="d-none">Cache cleared</p>
+            <p selector="error-pause" class="text-warning-emphasis d-none"><span selector="request-error-detail"></span> / The task has been automatically paused due to more than 30 error requests. Try reducing the download threads and resume. / <button selector="single-thread" class="btn btn-light">Enable Single Thread</button></p>
+            <p selector="error-box" class="text-danger d-none"><span selector="error"></span> / <a href="/blog/what-to-do-when-downloads-fails">Solve Problem</a></p>
+        </div>
+
+        <div>
+            <div selector="part-tips" class="alert alert-warning py-2 text-center d-none"><i class="bi bi-exclamation-circle"></i> The file is too large and needs to be saved in segments. Please save the segments as soon as possible to free up memory usage!</div>
+
+            <div selector="files" class="d-flex justify-content-center flex-wrap">
+
+                <div selector="files-part" class="border mx-2 mb-4 text-center rounded-3 shadow-sm bg-light overflow-hidden d-none">
+                    <div class="mx-5 py-2 position-relative">
+                        <span selector="part-icon" class="d-block display-2 position-relative opacity-0"><i class="bi bi-filetype-mp4"></i></span>
+                        <div selector="part-loading" class="d-flex justify-content-center align-items-center position-absolute w-100 h-100 top-0 start-0">
+                            <span class="spinner-border" style="width: 3.5rem; height: 3.5rem;" role="status"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center bg-dark-subtle text-dark-emphasis p-2 border-top border-dark-subtle">
+                        <div class="text-start">
+                            <span selector="part-name" class="d-block small">Part--</span>
+                            <span selector="part-duration" class="d-block small">--</span>
+                            <span selector="part-size" class="d-block small">--</span>
+                        </div>
+                        <button selector="part-save" class="fs-2 text-danger btn" disabled><i class="bi bi-download"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div selector="live-save-modal" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0 justify-content-end">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">Due to exceeding the limit, the recording has been refreshed and restarted. The completed portions have been archived. Please save them as soon as possible to free up memory and avoid memory depletion!</div>
+                <div class="modal-footer justify-content-center">
+                    <button selector="live-save-modal-btn" type="button" class="btn btn-lg btn-success"><i class="bi bi-download"></i> Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

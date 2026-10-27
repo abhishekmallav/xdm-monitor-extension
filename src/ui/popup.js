@@ -10,6 +10,10 @@ class VideoPopup {
         }
 
         this.loadState();
+        chrome.runtime.onMessage.addListener(message => {
+            if (message.type === 'media-updated') this.loadState();
+        });
+        document.getElementById('launchDesktop')?.addEventListener('click', () => window.open('xdm+app://launch'));
 
         const chk = document.getElementById("chk");
         if (chk) {
@@ -38,7 +42,7 @@ class VideoPopup {
 
         if (confirmClearBtn) {
             confirmClearBtn.addEventListener('click', (e) => {
-                chrome.runtime.sendMessage({ type: "clear" });
+                chrome.runtime.sendMessage({ type: "clear", tabId: this.tabId });
                 window.setTimeout(() => window.close(), 500);
             });
         }
@@ -117,14 +121,15 @@ class VideoPopup {
     }
 
     loadState() {
-        chrome.runtime.sendMessage({ type: "stat" }, (response) => {
-            if (response) {
-                this.onMsg(response);
-            }
-        });
+        chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+            this.tabId = tab?.id;
+            return chrome.runtime.sendMessage({ type: 'stat', tabId: this.tabId });
+        }).then(response => {
+            if (response && !response.error) this.onMsg(response);
+        }).catch(error => this.showError(error.message));
     }
 
-    updateStatusCard(isEnabled) {
+    updateStatusCard(isEnabled, desktopAvailable) {
         const card = document.getElementById('statusCard');
         const label = document.getElementById('statusLabel');
         const sub = document.getElementById('statusSub');
@@ -135,7 +140,7 @@ class VideoPopup {
             card.classList.remove('paused');
             card.classList.add('active');
             if (label) label.innerText = "Monitoring Active";
-            if (sub) sub.innerText = "Listening for downloadable media";
+            if (sub) sub.innerText = desktopAvailable ? "Listening for downloadable media" : "HLS monitoring is active";
         } else {
             card.classList.remove('active');
             card.classList.add('paused');
@@ -150,7 +155,15 @@ class VideoPopup {
             chk.checked = !!response.enabled;
         }
 
-        this.updateStatusCard(!!response.enabled);
+        this.updateStatusCard(!!response.enabled, response.desktopConnected && response.desktopEnabled);
+        const desktopNote = document.getElementById('desktopNote');
+        if (desktopNote) {
+            desktopNote.hidden = !!response.desktopConnected && !!response.desktopEnabled;
+            document.getElementById('desktopNoteText').textContent = response.desktopConnected
+                ? 'XDM desktop monitoring is disabled. HLS downloads are available here.'
+                : 'XDM desktop is disconnected. HLS downloads are available here.';
+            document.getElementById('launchDesktop').hidden = !!response.desktopConnected;
+        }
 
         const contentEl = document.getElementById('content');
         const emptyState = document.getElementById('emptyState');
@@ -171,6 +184,11 @@ class VideoPopup {
         }
 
         this.renderList(list);
+    }
+
+    showError(message) {
+        const error = document.getElementById('popupError');
+        if (error) { error.textContent = message; error.hidden = false; }
     }
 
     parseInfo(info) {
@@ -237,7 +255,7 @@ class VideoPopup {
             titleBtn.className = "media-title-btn";
             titleBtn.innerText = text;
             titleBtn.id = id;
-            titleBtn.title = text;
+            titleBtn.title = listItem.kind === 'hls' ? `${listItem.pageTitle || 'HLS video'} ? ${text}` : text;
             contentCol.appendChild(titleBtn);
 
             // Metadata Rail Column
@@ -258,9 +276,17 @@ class VideoPopup {
 
             cell.appendChild(card);
 
-            const handleDownload = (e) => {
+            const handleDownload = async (e) => {
                 e.stopPropagation();
-                chrome.runtime.sendMessage({ type: "vid", itemId: id });
+                if (listItem.kind === 'hls') {
+                    try {
+                        const response = await chrome.runtime.sendMessage({ type: 'hls-open', itemId: id, tabId: this.tabId });
+                        if (!response || response.error) throw new Error(response?.error || 'Unable to open HLS download.');
+                        window.close();
+                    } catch (error) { this.showError(error.message); }
+                } else {
+                    chrome.runtime.sendMessage({ type: 'vid', itemId: id });
+                }
             };
 
             titleBtn.addEventListener('click', handleDownload);

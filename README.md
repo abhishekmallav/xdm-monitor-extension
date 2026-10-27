@@ -1,39 +1,84 @@
-# XDM Integration Module
+﻿# XDM Integration Module
 
-A Chrome Manifest V3 extension that connects the browser to Xtreme Download Manager (XDM). It monitors downloads and media requests and provides context menu actions for downloading links and images.
+A Chrome Manifest V3 extension for Xtreme Download Manager integration and independent HLS downloads. Native XDM items continue to download through the desktop application; HLS playlists use a locally bundled FetchV download workflow and save through Chrome.
 
-## Repository structure
+## Structure
 
 ```text
 manifest.json       Extension configuration
 main.js             Background service worker entry point
-popup.html          Media list and monitoring controls
-error.html          Desktop connection error page
-disabled.html       Monitoring disabled page
+popup.html          Existing XDM popup, including detected HLS playlists
+hls.html            FetchV download-panel structure, with XDM styling
+error.html          Legacy desktop connection page
 register.html       Desktop registration page
 src/
-  background/       Application, desktop connector, and request watcher
+  background/       XDM connector, request watcher, HLS detection and tasks
   content/          Injected link/image collectors and keep-alive script
-  shared/           Shared logger
-  ui/               Scripts for the popup, error, and registration pages
-styles/             Shared page stylesheet
-assets/             All icons and images, without subfolders
-FetchV/             Separate extension; not used by the XDM extension
+  shared/           Logging, HLS detection, safe filenames
+  hls/              Completed-playlist validation and Chrome saving
+  ui/               Popup and download-page adapters
+styles/             XDM styles and download-page light/dark styling
+assets/             Icons, images and icon font; no subfolders
+vendor/
+  fetchv/           Pinned FetchV loader, workers, muxers and local FFmpeg
+  bootstrap/        Bootstrap behavior module; no Bootstrap CSS
+scripts/            Reproducible adapter for the FetchV loader snapshot
+tests/              Unit tests and isolated browser integration checks
+FetchV/             Original separate reference extension, left untouched
 ```
-
-The HTML pages stay at the repository root to preserve their extension URLs, including the registration page. Chrome loads `main.js` as a module; it imports the background application from `src/background/`.
 
 ## Load locally
 
-1. Open `chrome://extensions` and enable **Developer mode**.
-2. Select **Load unpacked** and choose this repository root, which contains the XDM `manifest.json`.
-3. Start the XDM desktop application. The connector communicates with it at `http://127.0.0.1:8597`.
-4. After editing the extension, select **Reload** on its extension card. Refresh web pages before checking injected scripts.
+1. In Chrome 116 or newer, open `chrome://extensions` and enable **Developer mode**.
+2. Select **Load unpacked** and choose this repository root.
+3. Reload the extension after updating files. Refresh a video page and start playback to detect its requests.
+4. Start XDM desktop for native XDM downloads. Its connector uses `http://127.0.0.1:8597`. HLS downloads work independently of the desktop connection.
 
-There is no build step or package installation required. `FetchV/` has its own manifest and is independent of XDM.
+No build step, npm installation, remote JavaScript, or FetchV website connection is required at runtime.
 
-## Verify changes
+## HLS workflow
 
-Check that the extension loads without service worker errors. With XDM running, check the popup, monitoring toggle, media downloads, and the context menu actions for individual links/images and all links/images. With XDM stopped, check the connection error page and its launch action. Check the disabled page when monitoring is disabled in XDM.
+Detected playlists appear in the XDM popup under their resource filenames, such as `playlist.m3u8` and `video.m3u8`. Clicking one opens a local download tab. That tab reuses FetchV's Panel, Controller, Fetcher, workers, and muxers; the earlier independent Mediabunny download pipeline has been replaced.
 
-When moving files, update module imports, HTML resource paths, manifest icon paths, dynamic toolbar icon paths, and the root-relative file paths passed to `chrome.scripting.executeScript`. Images assigned by popup scripts resolve relative to the HTML page.
+Like FetchV, downloading starts automatically. The page shows the file name, resolution, a slim progress bar, pill badges for segment counts, downloaded size and speed, and labeled action buttons for cancellation, pause/resume, saving, settings, and downloads history. Completed-part saving and fragment retry/skip controls are retained from the reference implementation where applicable.
+
+The settings panel follows the reference order and behavior:
+
+| Setting | Behavior / initial default |
+| --- | --- |
+| Download Threads | One to four concurrent requests; reference default is two. |
+| Video Preview | Show buffered/downloaded video; initially off. |
+| Auto Save | Save directly to the browser's default Downloads location when downloading finishes; **initially on**, with no file chooser. |
+| Clear Cache | Release the completed cached output after saving, following the reference's 60-second countdown; initially on. |
+| Tab Progress | Show progress and completion state in the tab title; **initially on**. |
+| Resolution | Choose a variant when a master playlist provides alternatives; highest available quality unless a remembered preference matches. |
+| Resolution Default | Remember the selected dimensions for future downloads; initially unset. |
+| File Naming | **Webpage Title by default**; Resource Filename and manual renaming are also available. |
+
+Preferences persist in the extension's `xdm-hls-options` storage key. A light/dark button uses the same saved `xdm-theme` preference as the XDM popup, follows the system theme when unset, and updates other open download pages.
+
+The save adapter uses Chrome's downloads API with `saveAs: false`, preserves the selected filename, automatically numbers filename conflicts, and waits for Chrome to finish before reporting success or allowing automatic cache clearing. A one-time preference migration enables Auto Save for existing installations; subsequent checkbox changes still persist. If saving fails or is cancelled, the cached output remains available for another attempt. With Clear Cache off, output remains available until the tab closes. The **Clear cache** toolbar button immediately releases this completed download's temporary media, playlists and preview, without deleting saved files. It is disabled while downloading or saving. Like the reference, the pipeline buffers media data and the output in the download tab; browser memory limits still apply.
+
+## Scope and request handling
+
+This version accepts completed videos only. A lightweight preflight checks the selected video/audio playlists for `EXT-X-ENDLIST` before starting the FetchV pipeline. Live and unfinished playlists are rejected, including a live rendition selected later. DASH, screen recording, and DRM-protected streams are outside this scope.
+
+Detection recognizes `.m3u8`/`.m3u` paths and standard HLS response MIME types, including extensionless URLs. Captures are deduplicated per tab, retained across service worker restarts, and cleared on navigation. Arbitrary response-body inspection is not implemented.
+
+Captured request context is replayed through temporary rules restricted to the download tab. Authentication headers are further restricted to the original stream origin. The FetchV website bridge and its response-header rewriting are replaced by XDM adapters; unrelated pages' headers are not modified. Expired links and site-specific authentication restrictions can still require replaying the source video and reopening the download.
+
+The locally bundled muxers support MPEG-TS, fragmented MP4, byte ranges, separate audio and ordinary AES-128 playlists with accessible keys. AES-128 uses the reference decrypter consistently across Chromium browsers. Codec/container compatibility remains subject to the underlying FetchV parsers and FFmpeg build.
+
+## Validate
+
+Run `npm test` (`npm.cmd test` in Windows PowerShell) for the unit suite. Node.js 22+ is recommended; no npm dependencies are needed.
+
+Run `npm run test:browser` for the browser matrix, or `node tests/browser-smoke.mjs --fixture=ts` for one scenario. The browser checks require `ffmpeg`, `ffprobe`, and Edge on Windows. `BROWSER_BINARY` can point to another compatible Chromium binary that permits unpacked extensions. Every run uses a separate temporary profile and authenticated local fixtures, never the user's browser profile.
+
+The matrix exercises TS/fMP4/byte-range HLS, separate audio, AES-128 with a Chrome user agent, remembered resolution, actual request concurrency, Auto Save, file naming, cache clearing, theme switching, live rejection, and the real browser downloads API. Saved MP4s are checked for duration, resolution, audio/video tracks, and decoding. The tests exercise the production downloads API unchanged; the cache countdown is accelerated only in the cache test. Screenshots and saved fixtures are retained in the printed temporary folders for inspection.
+
+For manual checks, verify automatic saving to the browser's configured Downloads location and on-demand cache clearing with a real site's playlist, then verify native XDM downloads and context-menu actions with XDM desktop running.
+
+## Vendored source
+
+See `vendor/fetchv/README.md` for the public source snapshot, retained upstream files, exact adaptation boundaries, and checksums. `npm run vendor:fetchv` regenerates the local loader module from the pinned upstream snapshot without network access. The Bootstrap behavior module and icon font retain their MIT license notices under `vendor/bootstrap`.

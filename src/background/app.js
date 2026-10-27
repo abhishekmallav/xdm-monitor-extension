@@ -2,16 +2,27 @@
 import Logger from '../shared/logger.js';
 import RequestWatcher from './request-watcher.js';
 import Connector from './connector.js';
+import HlsMonitor from './hls-monitor.js';
+import { safeFilename } from '../shared/hls.js';
 
 export default class App {
     constructor() {
         this.logger = new Logger();
         this.videoList = [];
+        this.hlsFilenames = new Map();
         this.blockedHosts = [];
         this.fileExts = [];
         this.requestWatcher = new RequestWatcher(this.onRequestDataReceived.bind(this));
         this.tabsWatcher = [];
         this.userDisabled = false;
+        this.hlsMonitor = new HlsMonitor(() => this.updateActionIcon(), url => {
+            const hostname = new URL(url).hostname;
+            return this.blockedHosts.some(host => hostname.includes(host));
+        });
+        this.hlsMonitor.ready.then(() => {
+            this.userDisabled = this.hlsMonitor.paused;
+            this.updateActionIcon();
+        });
         this.appEnabled = false;
         this.onDownloadCreatedCallback = this.onDownloadCreated.bind(this);
         this.onDeterminingFilenameCallback = this.onDeterminingFilename.bind(this);
@@ -35,10 +46,10 @@ export default class App {
         this.logger.log("message from XDM");
         this.logger.log(msg);
         this.appEnabled = msg.enabled === true;
-        this.fileExts = msg.fileExts;
-        this.blockedHosts = msg.blockedHosts;
+        this.fileExts = msg.fileExts || [];
+        this.blockedHosts = msg.blockedHosts || [];
         this.tabsWatcher = msg.tabsWatcher;
-        this.videoList = msg.videoList;
+        this.videoList = msg.videoList || [];
         this.requestWatcher.updateConfig({
             mediaExts: msg.requestFileExts,
             blockedHosts: msg.blockedHosts,
@@ -68,9 +79,13 @@ export default class App {
 
     onDeterminingFilename(download, suggest) {
         this.logger.log("onDeterminingFilename");
-        if (!this.isMonitoringEnabled()) {
+        if (download.byExtensionId === chrome.runtime.id) {
+            const filename = this.hlsFilenames.get(download.url);
+            this.hlsFilenames.delete(download.url);
+            suggest(filename ? { filename, conflictAction: 'uniquify' } : undefined);
             return;
         }
+        if (!this.isMonitoringEnabled()) return;
         this.logger.log(download);
         let url = download.finalUrl || download.url;
         this.logger.log(url);
@@ -94,13 +109,13 @@ export default class App {
     }
 
     onTabUpdate(tabId, changeInfo, tab) {
-        if (changeInfo.url && changeInfo.url.indexOf("chrome:") === 0) {
+        if (!tab.url || !/^https?:/.test(tab.url)) {
             return;
         }
         chrome.scripting.executeScript({
             target: { tabId: tab.id },
             files: ["src/content/ping.js"],
-        }).then(() => this.logger.log("script injected"));
+        }).then(() => this.logger.log("script injected")).catch(() => {});
         if (!this.isMonitoringEnabled()) {
             return;
         }
@@ -133,6 +148,11 @@ export default class App {
         );
         chrome.runtime.onMessage.addListener(this.onPopupMessage.bind(this));
         this.requestWatcher.register();
+        this.hlsMonitor.register();
+        chrome.tabs.query({ active: true, lastFocusedWindow: true }).then(([tab]) => {
+            if (tab) this.activeTabId = String(tab.id);
+            this.updateActionIcon();
+        }).catch(() => {});
         this.attachContextMenu();
         chrome.tabs.onActivated.addListener(this.onTabActivated.bind(this));
     }
@@ -160,50 +180,24 @@ export default class App {
         return false;
     }
 
+    desktopMedia(tabId) {
+        if (!this.connector.isConnected() || !this.appEnabled) return [];
+        const hlsUrls = new Set(this.hlsMonitor.list(tabId).map(item => item.url));
+        return this.videoList.filter(vid => (!vid.tabId || vid.tabId == '-1' || vid.tabId == '0' ||
+            vid.tabId == tabId) && !hlsUrls.has(vid.url));
+    }
+
     updateActionIcon() {
         chrome.action.setIcon({ path: this.getActionIcon() });
-        let vc = "";
-        // if (this.videoList && this.videoList.length > 0) {
-        //     let len = this.videoList.length;
-        //     if (len > 0) {
-        //         vc = len + "";
-        //     }
-        // }
-        if (this.videoList && this.videoList.length > 0) {
-            let len = this.videoList.filter(vid => {
-                if (!vid.tabId) {
-                    return true;
-                }
-                if (vid.tabId == '-1' || vid.tabId == '0') {
-                    return true;
-                }
-                return (vid.tabId == this.activeTabId);
-            }).length;
-            if (len > 0) {
-                vc = len + "";
-            }
-        }
-        chrome.action.setBadgeText({ text: vc });
-        if (!this.connector.isConnected()) {
-            this.logger.log("Not connected...");
-            chrome.action.setPopup({ popup: "./error.html" });
-            return;
-        }
-        if (!this.appEnabled) {
-            chrome.action.setPopup({ popup: "./disabled.html" });
-            return;
-        }
-        else {
-            chrome.action.setPopup({ popup: "./popup.html" });
-            return;
-            // if (this.videoList && this.videoList.length > 0) {
-            //     chrome.action.setBadgeText({ text: this.videoList.length + "" });
-            // }
-        }
+        const count = this.desktopMedia(this.activeTabId).length + this.hlsMonitor.list(this.activeTabId).length;
+        chrome.action.setBadgeText({ text: count ? String(count) : '' });
+        // HLS is available even when the desktop application is disconnected.
+        chrome.action.setPopup({ popup: './popup.html' });
+        chrome.runtime.sendMessage({ type: 'media-updated' }).catch(() => {});
     }
 
     getActionIconName(icon) {
-        return "assets/" + (this.isMonitoringEnabled() ? icon + ".png" : icon + "-mono.png");
+        return "assets/" + (!this.userDisabled ? icon + ".png" : icon + "-mono.png");
     }
 
     getActionIcon() {
@@ -254,29 +248,39 @@ export default class App {
 
     onPopupMessage(request, sender, sendResponse) {
         this.logger.log(request.type);
-        if (request.type === "stat") {
-            let resp = {
-                enabled: this.isMonitoringEnabled(),
-                //list: this.videoList
-                list: this.videoList.filter(vid => {
-                    if (!vid.tabId) {
-                        return true;
-                    }
-                    if (vid.tabId == '-1' || vid.tabId == '0') {
-                        return true;
-                    }
-                    return (vid.tabId == this.activeTabId);
-                })
-            };
-            sendResponse(resp);
+        if (['stat', 'hls-open', 'hls-task', 'hls-release', 'hls-filename', 'hls-resources'].includes(request.type)) {
+            if (!sender.url?.startsWith(chrome.runtime.getURL(''))) return;
+            (async () => {
+                await this.hlsMonitor.ready;
+                await this.hlsMonitor.queue;
+                if (request.type === 'stat') {
+                    const tabId = request.tabId ?? this.activeTabId;
+                    return { enabled: !this.userDisabled, desktopConnected: !!this.connector.isConnected(),
+                        desktopEnabled: this.appEnabled,
+                        list: [...this.desktopMedia(tabId), ...this.hlsMonitor.list(tabId)] };
+                }
+                if (request.type === 'hls-open') {
+                    await this.hlsMonitor.open(request.itemId, request.tabId);
+                    return { ok: true };
+                }
+                if (!sender.tab || !sender.url.startsWith(chrome.runtime.getURL('hls.html'))) {
+                    throw new Error('Invalid downloader page.');
+                }
+                if (request.type === 'hls-task') return this.hlsMonitor.getTask(request.taskId, sender.tab.id);
+                if (request.type === 'hls-resources') return this.hlsMonitor.resources(request.taskId, sender.tab.id);
+                if (request.type === 'hls-filename') {
+                    if (!request.url?.startsWith('blob:' + chrome.runtime.getURL(''))) throw new Error('Invalid download URL.');
+                    this.hlsFilenames.set(request.url, safeFilename(request.filename));
+                    return { ok: true };
+                }
+                await this.hlsMonitor.cleanupTask(sender.tab.id);
+                return { ok: true };
+            })().then(sendResponse, error => sendResponse({ error: error.message }));
+            return true;
         }
-        else if (request.type === "cmd") {
+        else if (request.type === 'cmd') {
             this.userDisabled = request.enabled === false;
-            this.logger.log("request.enabled:" + request.enabled);
-            if (request.enabled && !this.connector.isConnected()) {
-                this.connector.launchApp();
-                return;
-            }
+            this.hlsMonitor.setPaused(this.userDisabled).catch(console.error);
             this.updateActionIcon();
         }
         else if (request.type === "vid") {
@@ -286,7 +290,8 @@ export default class App {
             });
         }
         else if (request.type === "clear") {
-            this.connector.postMessage("/clear", {});
+            this.hlsMonitor.clear(request.tabId ?? this.activeTabId);
+            if (this.connector.isConnected()) this.connector.postMessage("/clear", {});
         }
         else if (request.type === "links") {
             this.sendLinksToXDM(request.links, request.pageUrl);

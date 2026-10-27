@@ -905,3 +905,9 @@ body::before {
     transition-duration: 0.01ms !important;
   }
 }
+/* Desktop status remains visible alongside independent HLS downloads. */
+[hidden] { display: none !important; }
+.desktop-note { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 11px; color: var(--mut); border: 1px solid var(--gb); border-radius: var(--radius-md); background: var(--sf); }
+.desktop-note span { flex: 1; }
+.desktop-note button { flex-shrink: 0; font-size: 11px; padding: 5px 8px; }
+.popup-error { margin: 0; padding: 8px 10px; color: var(--error); background: var(--error-bg); border-radius: var(--radius-sm); }
