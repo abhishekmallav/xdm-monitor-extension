@@ -165,6 +165,19 @@ try {
     await monitor(popupSession);
     await until(() => evaluate(popupSession, `document.querySelectorAll('.media-title-btn').length`), 'popup HLS row');
     assert((await evaluate(popupSession, `document.getElementById('mediaCount').textContent`)).includes('1 item'));
+    if (process.argv.includes('--screenshots')) {
+        await command('Emulation.setDeviceMetricsOverride', {width:380,height:650,deviceScaleFactor:1,mobile:false}, popupSession);
+        await command('Page.enable', {}, popupSession);
+        await evaluate(popupSession, `Promise.race([document.fonts.ready, new Promise(resolve=>setTimeout(resolve,5000))])`);
+        await evaluate(popupSession, `if ((document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'))!=='dark') document.getElementById('themeToggle').click()`);
+        for (const theme of ['dark', 'light']) {
+            await evaluate(popupSession, `new Promise(resolve=>setTimeout(resolve,100))`);
+            const height = await evaluate(popupSession, `Math.ceil(document.body.getBoundingClientRect().height)`);
+            const snapshot = await command('Page.captureScreenshot', {format:'png',captureBeyondViewport:true,clip:{x:0,y:0,width:380,height,scale:1}}, popupSession);
+            fs.writeFileSync(path.join(root, 'popup-' + theme + '.png'), Buffer.from(snapshot.data, 'base64'));
+            await evaluate(popupSession, `document.getElementById('themeToggle').click()`);
+        }
+    }
     const chosen = fixture === 'threads' ? { threads: 4 } : fixture === 'auto-save' ? { autoSave: true, clearCache: false, filenameType: 'filename' } : fixture === 'quality' ? { defaultResolution: '160x90' } : {};
     const prefs = { ...chosen, ...(automatic ? {} : { autoSave: false }), ...(fixture === 'manual-cache' ? { clearCache: false } : {}) };
     if (fixture !== 'automatic-default') await evaluate(popupSession, `localStorage.setItem('xdm-hls-automatic-save-v1','1')`);
