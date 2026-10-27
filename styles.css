@@ -1,31 +1,127 @@
+/* ============================================================
+   Glass Minimal Design System — XDM Browser Monitor Extension
+   Brand: Orange (warm) · Blue (cool) · Green (fresh)
+   Default theme: dark  |  Respects prefers-color-scheme
+   ============================================================ */
+
+/* ── 1. Design tokens ─────────────────────────────────────── */
 :root {
-  --canvas: #F4F7FB;
-  --surface: #FFFFFF;
-  --muted-surface: #EEF3F8;
-  --text: #14243A;
-  --muted-text: #5D6B7D;
-  --border: #DBE3ED;
-  --primary: #2563EB;
-  --primary-hover: #1D4ED8;
-  --primary-light: #EFF6FF;
-  --success: #147D54;
-  --success-bg: #EDF9F2;
-  --success-border: #A3E0C1;
-  --warning: #9A5B00;
-  --warning-bg: #FFF8E1;
-  --warning-border: #F6D88E;
-  --error: #B42318;
-  --error-bg: #FFF1F0;
-  --error-border: #FECDCA;
-  --focus-ring: #7C3AED;
+  /* Light theme values */
+  --bg:     #F5F7FA;
+  --ink:    #101828;
+  --mut:    #667085;
+  --line:   #E4E7EC;
+
+  /* Brand */
+  --c1:  #E8801A;   /* warm  — orange  */
+  --c2:  #1E3A8A;   /* cool  — blue    */
+  --c3:  #138808;   /* fresh — green   */
+  --btn: #1E3A8A;
+
+  /* Semantic role aliases (mapped to brand) */
+  --success:        var(--c3);
+  --success-bg:     rgba(19, 136, 8, 0.10);
+  --success-border: rgba(19, 136, 8, 0.25);
+  --error:          #B42318;
+  --error-bg:       rgba(180, 35, 24, 0.08);
+  --error-border:   rgba(180, 35, 24, 0.22);
+  --primary:        var(--c2);
+  --primary-hover:  #1a337a;
+  --primary-light:  rgba(30, 58, 138, 0.10);
+
+  /* Glass surface */
+  --gl:  rgba(255, 255, 255, 0.55);
+  --gb:  rgba(255, 255, 255, 0.75);
+  --sf:  rgba(255, 255, 255, 0.40);
+  --tint:rgba(19, 136, 8, 0.10);
+  --sh:  0 8px 32px rgba(30, 58, 138, 0.10);
+
+  /* Backdrop glows */
+  --g1:  rgba(232, 128, 26, 0.26);   /* orange  top-left  */
+  --g2:  rgba(19,  136,  8, 0.20);   /* green   btm-right */
+  --g3:  rgba(30,  58,  138, 0.20);  /* blue    top-right */
+
+  /* Geometry */
   --radius-sm: 6px;
-  --radius-md: 9px;
-  --radius-lg: 11px;
-  --shadow-sm: 0 1px 2px rgba(20, 36, 58, 0.05);
-  --shadow-md: 0 3px 6px -1px rgba(20, 36, 58, 0.08), 0 2px 4px -2px rgba(20, 36, 58, 0.04);
-  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Helvetica Neue", Arial, sans-serif;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+
+  /* Scrollbar */
+  --scroll-thumb: rgba(100, 116, 139, 0.35);
+  --scroll-hover: rgba(100, 116, 139, 0.55);
+
+  /* Focus */
+  --focus-ring: var(--c3);
 }
 
+/* ── 2. Dark theme — via system preference (default) ───────── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:    #0B0F14;
+    --ink:   #E8ECF2;
+    --mut:   #93A0B4;
+    --line:  #1E2733;
+    --c1:  #FFA94D;
+    --c2:  #8FA8FF;
+    --c3:  #4ADE80;
+    --btn: #3B5BDB;
+    --success:        var(--c3);
+    --success-bg:     rgba(74, 222, 128, 0.10);
+    --success-border: rgba(74, 222, 128, 0.25);
+    --error:          #FF6B6B;
+    --error-bg:       rgba(255, 107, 107, 0.10);
+    --error-border:   rgba(255, 107, 107, 0.25);
+    --primary:        var(--c2);
+    --primary-hover:  #b3c5ff;
+    --primary-light:  rgba(143, 168, 255, 0.12);
+    --gl:   rgba(18, 26, 38, 0.60);
+    --gb:   rgba(255, 255, 255, 0.10);
+    --sf:   rgba(255, 255, 255, 0.05);
+    --tint: rgba(74, 222, 128, 0.10);
+    --sh:   0 8px 32px rgba(0, 0, 0, 0.45);
+    --g1:  rgba(255, 169, 77, 0.18);
+    --g2:  rgba(74, 222, 128, 0.13);
+    --g3:  rgba(80, 110, 255, 0.24);
+    --scroll-thumb: rgba(255, 255, 255, 0.12);
+    --scroll-hover: rgba(255, 255, 255, 0.20);
+    --focus-ring: var(--c3);
+  }
+}
+
+/* Manual dark override */
+:root[data-theme="dark"] {
+  --bg:    #0B0F14;
+  --ink:   #E8ECF2;
+  --mut:   #93A0B4;
+  --line:  #1E2733;
+  --c1:  #FFA94D;
+  --c2:  #8FA8FF;
+  --c3:  #4ADE80;
+  --btn: #3B5BDB;
+  --success:        var(--c3);
+  --success-bg:     rgba(74, 222, 128, 0.10);
+  --success-border: rgba(74, 222, 128, 0.25);
+  --error:          #FF6B6B;
+  --error-bg:       rgba(255, 107, 107, 0.10);
+  --error-border:   rgba(255, 107, 107, 0.25);
+  --primary:        var(--c2);
+  --primary-hover:  #b3c5ff;
+  --primary-light:  rgba(143, 168, 255, 0.12);
+  --gl:   rgba(18, 26, 38, 0.60);
+  --gb:   rgba(255, 255, 255, 0.10);
+  --sf:   rgba(255, 255, 255, 0.05);
+  --tint: rgba(74, 222, 128, 0.10);
+  --sh:   0 8px 32px rgba(0, 0, 0, 0.45);
+  --g1:  rgba(255, 169, 77, 0.18);
+  --g2:  rgba(74, 222, 128, 0.13);
+  --g3:  rgba(80, 110, 255, 0.24);
+  --scroll-thumb: rgba(255, 255, 255, 0.12);
+  --scroll-hover: rgba(255, 255, 255, 0.20);
+  --focus-ring: var(--c3);
+}
+
+/* ── 3. Reset & base ──────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -36,24 +132,41 @@ html, body {
   width: 380px;
   min-width: 380px;
   max-width: 380px;
-  background-color: var(--canvas);
-  color: var(--text);
-  font-family: var(--font-family);
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Inter", "Helvetica Neue", Arial, sans-serif;
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.50;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
-/* App Header */
+/* ── 4. Backdrop glows (glass requires colourful backdrop) ── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(180px 180px at 0% 0%,    var(--g1), transparent 70%),
+    radial-gradient(160px 160px at 100% 0%,  var(--g3), transparent 70%),
+    radial-gradient(200px 200px at 80% 100%, var(--g2), transparent 70%);
+  pointer-events: none;
+}
+
+/* ── 5. App Header ────────────────────────────────────────── */
 .app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  padding: 11px 14px;
+  background: var(--gl);
+  border-bottom: 1px solid var(--gb);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  position: relative;
+  z-index: 10;
 }
 
 .brand-wrapper {
@@ -64,16 +177,16 @@ html, body {
 }
 
 .brand-icon {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
   border-radius: 4px;
 }
 
 .brand-title {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--ink);
   letter-spacing: -0.2px;
   white-space: nowrap;
   overflow: hidden;
@@ -86,6 +199,7 @@ html, body {
   gap: 4px;
 }
 
+/* ── 6. Icon buttons ──────────────────────────────────────── */
 .icon-btn {
   display: inline-flex;
   align-items: center;
@@ -95,26 +209,23 @@ html, body {
   padding: 0;
   border: 1px solid transparent;
   background: transparent;
-  color: var(--muted-text);
+  color: var(--mut);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .icon-btn:hover {
-  background: var(--muted-surface);
-  color: var(--text);
+  background: var(--sf);
+  border-color: var(--gb);
+  color: var(--ink);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .icon-btn:focus-visible {
   outline: 2px solid var(--focus-ring);
-  outline-offset: 1px;
-}
-
-.icon-btn svg {
-  width: 15px;
-  height: 15px;
-  stroke-width: 2;
+  outline-offset: 2px;
 }
 
 .icon-btn i {
@@ -122,12 +233,19 @@ html, body {
   line-height: 1;
 }
 
+.icon-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+}
+
 .icon-btn-danger:hover {
   background: var(--error-bg);
+  border-color: var(--error-border);
   color: var(--error);
 }
 
-/* Main Container */
+/* ── 7. Main layout ───────────────────────────────────────── */
 .main-layout {
   padding: 12px 14px;
   display: flex;
@@ -135,39 +253,39 @@ html, body {
   gap: 10px;
 }
 
-/* Status Card */
+/* ── 8. Status Card ───────────────────────────────────────── */
 .status-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  padding: 10px 13px;
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  background: var(--gl);
+  border: 1px solid var(--gb);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  box-shadow: var(--sh);
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 .status-card.active {
-  background-color: var(--success-bg);
-  border-color: var(--success-border);
+  background: linear-gradient(90deg, var(--tint) 0%, var(--gl) 60%);
 }
 
 .status-card.paused {
-  background-color: #F5F6F7;
-  border-color: var(--border);
+  background: var(--gl);
 }
 
 .status-info {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   min-width: 0;
 }
 
 .status-indicator {
   position: relative;
-  margin-left: -10px;
+  margin-left: -2px;
   flex-shrink: 0;
 }
 
@@ -179,21 +297,25 @@ html, body {
 .status-label {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--ink);
   line-height: 1.2;
 }
 
 .status-card.active .status-label {
-  color: var(--success);
+  color: var(--c3);
+}
+
+.status-card.paused .status-label {
+  color: var(--mut);
 }
 
 .status-sub {
   font-size: 11px;
-  color: var(--muted-text);
+  color: var(--mut);
   margin-top: 2px;
 }
 
-/* Toggle Switch */
+/* ── 9. Toggle Switch ─────────────────────────────────────── */
 .switch-label {
   display: inline-flex;
   align-items: center;
@@ -214,29 +336,32 @@ html, body {
   position: relative;
   width: 38px;
   height: 22px;
-  background-color: #CFD8E3;
+  background: var(--line);
   border-radius: 12px;
-  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--gb);
+  transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .switch-thumb {
   position: absolute;
-  top: 3px;
-  left: 3px;
+  top: 2px;
+  left: 2px;
   width: 16px;
   height: 16px;
-  background-color: #FFFFFF;
+  background: var(--mut);
   border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease;
 }
 
 .switch-label input:checked + .switch-track {
-  background-color: var(--primary);
+  background: color-mix(in srgb, var(--btn) 80%, transparent);
+  border-color: var(--c2);
 }
 
 .switch-label input:checked + .switch-track .switch-thumb {
   transform: translateX(16px);
+  background: #ffffff;
 }
 
 .switch-label input:focus-visible + .switch-track {
@@ -244,7 +369,7 @@ html, body {
   outline-offset: 2px;
 }
 
-/* Content & Media List */
+/* ── 10. Content & media list ─────────────────────────────── */
 #content {
   display: flex;
   flex-direction: column;
@@ -260,36 +385,41 @@ html, body {
 }
 
 .section-title {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--muted-text);
+  text-transform: uppercase;
+  color: var(--mut);
 }
 
 .media-badge-count {
   font-size: 11px;
   font-weight: 600;
-  background: var(--muted-surface);
-  color: var(--primary);
-  border: 1px solid var(--border);
-  padding: 1px 7px;
-  border-radius: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--sf);
+  border: 1px solid var(--gb);
+  color: var(--c2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
+/* ── 11. List scroll area ─────────────────────────────────── */
 .list-scroll-area {
   max-height: 320px;
   min-height: 50px;
   overflow-y: auto;
   overflow-x: hidden;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
+  background: var(--gl);
+  border: 1px solid var(--gb);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  box-shadow: var(--sh);
 }
 
 .list-scroll-area::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 
 .list-scroll-area::-webkit-scrollbar-track {
@@ -297,15 +427,15 @@ html, body {
 }
 
 .list-scroll-area::-webkit-scrollbar-thumb {
-  background-color: #CFD8E3;
+  background: var(--scroll-thumb);
   border-radius: 3px;
 }
 
 .list-scroll-area::-webkit-scrollbar-thumb:hover {
-  background-color: #B2C2D4;
+  background: var(--scroll-hover);
 }
 
-/* Table Override */
+/* ── 12. Table (hairlines only — no nested glass) ─────────── */
 #table {
   width: 100%;
   border-collapse: separate;
@@ -315,8 +445,8 @@ html, body {
 }
 
 #table tr {
-  border-bottom: 1px solid var(--border);
-  transition: background-color 0.15s ease;
+  border-bottom: 1px solid var(--line);
+  transition: background 0.15s ease;
 }
 
 #table tr:last-child {
@@ -327,28 +457,28 @@ html, body {
   padding: 0;
 }
 
-/* Media Item Card (4-column grid layout per spec) */
+/* ── 13. Media item row ───────────────────────────────────── */
 .media-item-row {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 10px;
-  padding: 9px 10px;
+  padding: 9px 11px;
   cursor: pointer;
   background: transparent;
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  transition: background 0.15s ease;
 }
 
 .media-item-row:hover {
-  background-color: var(--muted-surface);
+  background: var(--sf);
 }
 
 .media-icon-wrap {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: var(--radius-sm);
-  background: #F0F4FA;
-  border: 1px solid var(--border);
+  background: var(--sf);
+  border: 1px solid var(--gb);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -356,8 +486,8 @@ html, body {
 }
 
 .media-icon-img {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   object-fit: contain;
 }
 
@@ -373,9 +503,9 @@ html, body {
   border: none;
   padding: 0;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 500;
-  color: var(--text);
+  color: var(--ink);
   text-align: left;
   cursor: pointer;
   line-height: 1.35;
@@ -388,7 +518,7 @@ html, body {
 }
 
 .media-item-row:hover .media-title-btn {
-  color: var(--primary);
+  color: var(--c2);
 }
 
 .media-title-btn:focus-visible {
@@ -397,7 +527,7 @@ html, body {
   border-radius: 2px;
 }
 
-/* Metadata Rail */
+/* Meta pills */
 .media-meta-rail {
   display: flex;
   flex-direction: column;
@@ -409,29 +539,29 @@ html, body {
 .meta-pill {
   font-size: 10px;
   font-weight: 600;
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: 4px;
-  background: var(--muted-surface);
-  color: var(--muted-text);
-  border: 1px solid var(--border);
+  background: var(--sf);
+  border: 1px solid var(--gb);
+  color: var(--mut);
   white-space: nowrap;
   letter-spacing: 0.2px;
 }
 
 .meta-pill.type {
   background: var(--primary-light);
-  color: var(--primary);
-  border-color: #BFDBFE;
+  color: var(--c2);
+  border-color: var(--gb);
   text-transform: uppercase;
 }
 
 .meta-pill.res {
-  background: #FEF3C7;
-  color: #B45309;
-  border-color: #FDE68A;
+  background: rgba(232, 128, 26, 0.12);
+  color: var(--c1);
+  border-color: rgba(232, 128, 26, 0.25);
 }
 
-/* Empty State */
+/* ── 14. Empty State ──────────────────────────────────────── */
 .empty-state {
   display: none;
   flex-direction: column;
@@ -439,46 +569,52 @@ html, body {
   justify-content: center;
   text-align: center;
   padding: 24px 16px;
-  background: var(--surface);
-  border: 1px dashed var(--border);
+  background: var(--gl);
+  border: 1px dashed var(--gb);
   border-radius: var(--radius-lg);
-  color: var(--muted-text);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  box-shadow: var(--sh);
+  color: var(--mut);
 }
 
 .empty-state-icon {
   width: 36px;
   height: 36px;
-  margin-bottom: 8px;
-  color: #94A3B8;
+  margin-bottom: 10px;
+  color: var(--mut);
+  opacity: 0.55;
 }
 
 .empty-state-title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text);
-  margin-bottom: 4px;
+  color: var(--ink);
+  margin-bottom: 5px;
 }
 
 .empty-state-desc {
   font-size: 11px;
-  line-height: 1.4;
+  line-height: 1.45;
   max-width: 240px;
+  color: var(--mut);
 }
 
-/* Inline Confirmation Panel (POPUP-STYLE.md) */
+/* ── 15. Inline confirm panel ─────────────────────────────── */
 .inline-confirm-panel {
   display: none;
-  padding: 10px 12px;
-  background-color: var(--error-bg);
+  padding: 10px 13px;
+  background: var(--error-bg);
   border: 1px solid var(--error-border);
   border-radius: var(--radius-md);
-  margin-top: 4px;
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
   animation: fadeIn 0.15s ease-out;
 }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .confirm-header {
@@ -497,7 +633,7 @@ html, body {
   gap: 8px;
 }
 
-/* Action Buttons */
+/* ── 16. Action Buttons ───────────────────────────────────── */
 .footer-actions {
   display: flex;
   gap: 8px;
@@ -509,26 +645,28 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 7px 12px;
+  padding: 7px 13px;
   border-radius: var(--radius-sm);
   font-size: 12px;
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  transition: all 0.15s ease;
+  background: var(--sf);
+  border: 1px solid var(--gb);
+  color: var(--ink);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .action-btn:hover {
-  background: var(--muted-surface);
-  border-color: #CBD5E1;
+  background: var(--gl);
+  border-color: var(--c2);
 }
 
 .action-btn:focus-visible {
   outline: 2px solid var(--focus-ring);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 
 .action-btn.flex-1 {
@@ -536,45 +674,47 @@ html, body {
 }
 
 .action-btn.btn-danger {
-  background: #FFF1F0;
+  background: var(--error-bg);
   color: var(--error);
   border-color: var(--error-border);
   font-weight: 600;
 }
 
 .action-btn.btn-danger:hover {
-  background: #FEE4E2;
-  border-color: #FDA29B;
+  background: rgba(180, 35, 24, 0.16);
+  border-color: var(--error);
 }
 
 .action-btn.btn-primary {
-  background: var(--primary);
-  color: #FFFFFF;
-  border-color: var(--primary);
+  background: color-mix(in srgb, var(--btn) 85%, transparent);
+  color: #ffffff;
+  border-color: var(--gb);
+  font-weight: 500;
 }
 
 .action-btn.btn-primary:hover {
-  background: var(--primary-hover);
-  border-color: var(--primary-hover);
+  background: color-mix(in srgb, var(--btn) 95%, transparent);
+  border-color: var(--c2);
 }
 
-/* Legacy Compatibility classes */
+/* ── 17. Legacy compat classes ────────────────────────────── */
 .flat-button {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  padding: 7px 12px;
+  background: var(--sf);
+  border: 1px solid var(--gb);
+  color: var(--ink);
+  padding: 7px 13px;
   border-radius: var(--radius-sm);
   font-family: inherit;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  backdrop-filter: blur(12px);
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .flat-button:hover {
-  background: var(--muted-surface);
-  border-color: #CBD5E1;
+  background: var(--gl);
+  border-color: var(--c2);
 }
 
 .primary-button {
@@ -582,24 +722,25 @@ html, body {
   align-items: center;
   justify-content: center;
   padding: 8px 14px;
-  background: var(--primary);
-  color: #FFFFFF;
+  background: color-mix(in srgb, var(--btn) 85%, transparent);
+  color: #ffffff;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--primary);
+  border: 1px solid var(--gb);
   text-decoration: none;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  backdrop-filter: blur(12px);
+  transition: background 0.15s ease;
 }
 
 .primary-button:hover {
-  background: var(--primary-hover);
+  background: color-mix(in srgb, var(--btn) 95%, transparent);
 }
 
 .error-msg {
-  border-left: 4px solid var(--error);
-  background-color: var(--error-bg);
+  border-left: 3px solid var(--error);
+  background: var(--error-bg);
   border-top: 1px solid var(--error-border);
   border-right: 1px solid var(--error-border);
   border-bottom: 1px solid var(--error-border);
@@ -608,18 +749,21 @@ html, body {
   font-size: 13px;
   color: var(--error);
   line-height: 1.4;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .error-msg p {
   margin: 0;
 }
 
-/* Modal Dialog (More Formats) */
+/* ── 18. Modal (More Formats) ─────────────────────────────── */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(20, 36, 58, 0.45);
-  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 100;
   display: none;
   align-items: center;
@@ -633,13 +777,16 @@ html, body {
 }
 
 .modal-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 10px 25px -5px rgba(20, 36, 58, 0.15), 0 8px 10px -6px rgba(20, 36, 58, 0.1);
+  background: var(--gl);
+  border: 1px solid var(--gb);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: var(--sh), 0 0 0 1px var(--line);
+  border-radius: var(--radius-xl);
+  border-top: 3px solid var(--c1);
   width: 100%;
   max-width: 340px;
-  padding: 16px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -648,7 +795,7 @@ html, body {
 
 @keyframes modalScaleIn {
   from { opacity: 0; transform: scale(0.95) translateY(4px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .modal-header {
@@ -659,15 +806,16 @@ html, body {
 }
 
 .modal-icon-badge {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-sm);
   background: var(--primary-light);
-  color: var(--primary);
+  border: 1px solid var(--gb);
+  color: var(--c2);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
+  font-size: 14px;
   flex-shrink: 0;
 }
 
@@ -680,14 +828,15 @@ html, body {
   margin: 0;
   font-size: 14px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--ink);
+  letter-spacing: -0.01em;
   line-height: 1.25;
 }
 
 .modal-subtitle {
   margin: 2px 0 0;
   font-size: 11px;
-  color: var(--muted-text);
+  color: var(--mut);
 }
 
 .modal-close-btn {
@@ -699,22 +848,31 @@ html, body {
 .modal-body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 11px;
 }
 
+.modal-footer {
+  margin-top: 2px;
+}
+
+/* ── 19. Instruction steps ────────────────────────────────── */
 .instruction-step {
   display: flex;
   gap: 10px;
   align-items: flex-start;
 }
 
+/* Cycling brand colours on step badges */
+.instruction-step:nth-child(1) .step-badge { border-color: var(--c1); color: var(--c1); }
+.instruction-step:nth-child(2) .step-badge { border-color: var(--c2); color: var(--c2); }
+.instruction-step:nth-child(3) .step-badge { border-color: var(--c3); color: var(--c3); }
+
 .step-badge {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: var(--muted-surface);
-  color: var(--primary);
-  border: 1px solid var(--border);
+  background: var(--sf);
+  border: 1.5px solid var(--mut);
   font-size: 11px;
   font-weight: 700;
   display: flex;
@@ -727,17 +885,31 @@ html, body {
 .step-content {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 
 .step-title {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--ink);
 }
 
 .step-desc {
   font-size: 11px;
-  color: var(--muted-text);
-  line-height: 1.35;
+  color: var(--mut);
+  line-height: 1.40;
+}
+
+/* ── 20. Focus ring (universal) ───────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+/* ── 21. Motion — respect reduced-motion ─────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

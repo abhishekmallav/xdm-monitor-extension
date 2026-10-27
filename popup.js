@@ -79,6 +79,41 @@ class VideoPopup {
                 this.loadState();
             });
         }
+
+        // ── Theme toggle ────────────────────────────────────────
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon   = document.getElementById('themeIcon');
+        const R           = document.documentElement;
+
+        const isDark = () => R.dataset.theme
+            ? R.dataset.theme === 'dark'
+            : matchMedia('(prefers-color-scheme: dark)').matches;
+
+        const applyTheme = (dark) => {
+            R.dataset.theme = dark ? 'dark' : 'light';
+            if (themeIcon) {
+                themeIcon.className = dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            }
+            if (themeToggle) {
+                themeToggle.title       = dark ? 'Switch to light mode' : 'Switch to dark mode';
+                themeToggle.ariaLabel   = themeToggle.title;
+            }
+        };
+
+        // Apply saved preference on load
+        try {
+            const saved = localStorage.getItem('xdm-theme');
+            if (saved) R.dataset.theme = saved;
+        } catch (_) {}
+        applyTheme(isDark());
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const nowDark = !isDark();
+                applyTheme(nowDark);
+                try { localStorage.setItem('xdm-theme', nowDark ? 'dark' : 'light'); } catch (_) {}
+            });
+        }
     }
 
     loadState() {
