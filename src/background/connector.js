@@ -1,5 +1,5 @@
 "use strict";
-import Logger from './logger.js';
+import Logger from '../shared/logger.js';
 
 const APP_BASE_URL = "http://127.0.0.1:8597";
 

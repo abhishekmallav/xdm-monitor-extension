@@ -1,5 +1,5 @@
 "use strict";
-import Logger from './logger.js';
+import Logger from '../shared/logger.js';
 
 export default class RequestWatcher {
     constructor(callback) {

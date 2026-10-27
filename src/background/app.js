@@ -1,5 +1,5 @@
 "use strict";
-import Logger from './logger.js';
+import Logger from '../shared/logger.js';
 import RequestWatcher from './request-watcher.js';
 import Connector from './connector.js';
 
@@ -99,7 +99,7 @@ export default class App {
         }
         chrome.scripting.executeScript({
             target: { tabId: tab.id },
-            files: ["ping.js"],
+            files: ["src/content/ping.js"],
         }).then(() => this.logger.log("script injected"));
         if (!this.isMonitoringEnabled()) {
             return;
@@ -203,7 +203,7 @@ export default class App {
     }
 
     getActionIconName(icon) {
-        return this.isMonitoringEnabled() ? icon + ".png" : icon + "-mono.png";
+        return "assets/" + (this.isMonitoringEnabled() ? icon + ".png" : icon + "-mono.png");
     }
 
     getActionIcon() {
@@ -324,7 +324,7 @@ export default class App {
         this.logger.log(tab);
         chrome.scripting.executeScript({
             target: { tabId: tab.id, allFrames: true },
-            files: [image === true ? "get-images.js" : "get-links.js"],
+            files: [image === true ? "src/content/get-images.js" : "src/content/get-links.js"],
         }).then(() => this.logger.log("script injected in all frames"));
     }
 

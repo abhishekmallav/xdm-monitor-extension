@@ -258,6 +258,7 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   padding: 10px 13px;
   border-radius: var(--radius-lg);
   background: var(--gl);
@@ -281,6 +282,13 @@ body::before {
   align-items: center;
   gap: 10px;
   min-width: 0;
+}
+
+.status-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .status-indicator {
@@ -376,23 +384,8 @@ body::before {
   gap: 8px;
 }
 
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 2px;
-  margin-top: 2px;
-}
-
-.section-title {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: var(--mut);
-}
-
 .media-badge-count {
+  white-space: nowrap;
   font-size: 11px;
   font-weight: 600;
   padding: 2px 8px;
@@ -445,12 +438,11 @@ body::before {
 }
 
 #table tr {
-  border-bottom: 1px solid var(--line);
   transition: background 0.15s ease;
 }
 
-#table tr:last-child {
-  border-bottom: none;
+#table tr:not(:last-child) td {
+  border-bottom: 1px solid var(--line);
 }
 
 #table td {

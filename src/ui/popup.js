@@ -158,12 +158,13 @@ class VideoPopup {
 
         const list = (response && response.list) ? response.list : [];
 
+        if (mediaCount) {
+            mediaCount.innerText = `${list.length} item${list.length === 1 ? '' : 's'}`;
+        }
+
         if (list.length > 0) {
             if (contentEl) contentEl.style.display = 'flex';
             if (emptyState) emptyState.style.display = 'none';
-            if (mediaCount) {
-                mediaCount.innerText = `${list.length} item${list.length > 1 ? 's' : ''}`;
-            }
         } else {
             if (contentEl) contentEl.style.display = 'none';
             if (emptyState) emptyState.style.display = 'flex';
@@ -224,7 +225,7 @@ class VideoPopup {
             iconWrap.className = "media-icon-wrap";
             const iconImg = document.createElement('img');
             iconImg.className = "media-icon-img";
-            iconImg.src = isAudio ? './audio.png' : './video.png';
+            iconImg.src = isAudio ? './assets/audio.png' : './assets/video.png';
             iconImg.alt = isAudio ? 'Audio' : 'Video';
             iconWrap.appendChild(iconImg);
 

@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <title>XDM Browser Monitor</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="styles.css">
-  <script src="popup.js"></script>
+  <link rel="stylesheet" href="styles/styles.css">
+  <script src="src/ui/popup.js"></script>
 </head>
 <body>
   <!-- Header: XDM Logo and title, more formats, clear items, refresh -->
   <header class="app-header">
     <div class="brand-wrapper">
-      <img src="xdm-logo-orange.png" alt="XDM Logo" class="brand-icon" onerror="this.src='icon16.png'">
+      <img src="assets/xdm-logo-orange.png" alt="XDM Logo" class="brand-icon" onerror="this.src='assets/icon16.png'">
       <span class="brand-title">XDM Browser Monitor</span>
     </div>
     <div class="header-actions">
@@ -89,12 +89,15 @@
           <span class="status-sub" id="statusSub">Listening for downloadable media</span>
         </div>
       </div>
-      <label class="switch-label" title="Toggle browser monitoring">
-        <input type="checkbox" id="chk">
-        <span class="switch-track">
-          <span class="switch-thumb"></span>
-        </span>
-      </label>
+      <div class="status-actions">
+        <span class="media-badge-count" id="mediaCount" aria-live="polite">0 items</span>
+        <label class="switch-label" title="Toggle browser monitoring">
+          <input type="checkbox" id="chk" aria-label="Toggle browser monitoring">
+          <span class="switch-track">
+            <span class="switch-thumb"></span>
+          </span>
+        </label>
+      </div>
     </section>
 
     <!-- Inline Confirmation Panel for Clear -->
@@ -120,11 +123,6 @@
 
     <!-- Media Section -->
     <section id="content">
-      <div class="section-header">
-        <span class="section-title">Detected Media</span>
-        <span class="media-badge-count" id="mediaCount">0 items</span>
-      </div>
-
       <div id="list" class="list-scroll-area">
         <table id="table"></table>
       </div>
